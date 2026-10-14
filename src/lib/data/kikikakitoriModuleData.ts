@@ -30,6 +30,7 @@ export interface KikikakitoriPackageItem {
   isPublished: boolean;
   questionCount: number;
   tips: string;
+  fullDialogue: string;
   questions: KikikakitoriQuestionItem[];
 }
 
@@ -44,6 +45,7 @@ export const KIKIKAKITORI_PACKAGES: KikikakitoriPackageItem[] = [
     durationFormatted: '00:32',
     durationSeconds: 32,
     audioUrl: '/audio/kikikakitori/set1.mp3',
+    fullDialogue: 'まもなく3番線に、10時15分発、新大阪行き ひかり501号がまいります。黄色い点字ブロックの内側までお下がりください。次に、明日の朝の集合について先生から連絡します。明日の朝、必ず電子辞書または辞書を持ってきてください。なお、濃霧のため、学校行きの連絡バスの到着が約15分遅れております。出発の前に、2階の図書館の前に集合してください。閉会式は予定通り、午後2時半より体育館にて行います。以上です。',
     status: 'aktif',
     bestScore: 85,
     isPublished: true,
@@ -148,6 +150,7 @@ export const KIKIKAKITORI_PACKAGES: KikikakitoriPackageItem[] = [
     durationFormatted: '00:20',
     durationSeconds: 20,
     audioUrl: '/audio/kikikakitori/set2.mp3',
+    fullDialogue: 'いらっしゃいませ！サンドイッチが250円、牛乳が120円でございます。合計で370円になります。500円のお預かりですので、おつりは130円のお返しでございます。レシートはご利用ですか？また、温かいお茶は入口右側の棚にございます。本日はご来店いただき、誠にありがとうございます。',
     status: 'aktif',
     bestScore: 90,
     isPublished: true,
@@ -235,6 +238,7 @@ export const KIKIKAKITORI_PACKAGES: KikikakitoriPackageItem[] = [
     durationFormatted: '00:25',
     durationSeconds: 25,
     audioUrl: '/audio/kikikakitori/set3.mp3',
+    fullDialogue: '生徒の皆さんにお知らせします。今週の金曜日に開催される文化祭の準備についてです。各クラスの展示準備は、午後4時までに完了させてください。体育館での演劇部のリハーサルは午後2時から始まります。また、模擬店で火気を使用するクラスは、職員室で消火器を必ず受け取ってください。ゴミの分別は、昇降口前の回収所にて行います。',
     status: 'aktif',
     bestScore: 90,
     isPublished: true,
@@ -322,6 +326,7 @@ export const KIKIKAKITORI_PACKAGES: KikikakitoriPackageItem[] = [
     durationFormatted: '00:21',
     durationSeconds: 21,
     audioUrl: '/audio/kikikakitori/set4.mp3',
+    fullDialogue: 'もしもし、田中くん？今どこにいる？ハチ公前広場にいるんだけど、人が多くて見つからないよ。えっ、JR渋谷駅のハチ公改札口を出たところ？分かった、緑色の看板のカフェの前に立ってるね。青いリュックサックを背負ってるから目印にして。あと5分くらいで合流できそうかな？気をつけて来てね！',
     status: 'aktif',
     bestScore: 95,
     isPublished: true,
@@ -409,6 +414,7 @@ export const KIKIKAKITORI_PACKAGES: KikikakitoriPackageItem[] = [
     durationFormatted: '00:23',
     durationSeconds: 23,
     audioUrl: '/audio/kikikakitori/set5.mp3',
+    fullDialogue: '続いて、明日の全国の天気予報です。関東地方は朝から晴れて清々しい秋晴れとなるでしょう。東京の最高気温は22度、最低気温は14度の予想です。朝晩は冷え込みますので、上着を一枚ご用意してお出かけください。一方、北海道と東北地方では日本海からの低気圧の影響により、夕方以降に強い雨が降る見込みです。折りたたみ傘をお持ちください。',
     status: 'aktif',
     bestScore: 88,
     isPublished: true,
@@ -496,6 +502,7 @@ export const KIKIKAKITORI_PACKAGES: KikikakitoriPackageItem[] = [
     durationFormatted: '00:27',
     durationSeconds: 27,
     audioUrl: '/audio/kikikakitori/set6.mp3',
+    fullDialogue: '聞き書きのディクテーション練習です。よく聞いて書き取ってください。1番：図書館で日本語の辞書を借りました。2番：来週の月曜日に東京へ行きます。3番：駅前の喫茶店で美味しいコーヒーを飲みました。4番：明日の天気は晴れ時々曇りでしょう。5番：毎日休まずに漢字の練習を続けています。',
     status: 'aktif',
     bestScore: 92,
     isPublished: true,
