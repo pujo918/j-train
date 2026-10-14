@@ -27,6 +27,7 @@ import {
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import { useAppStore } from '@/lib/data/store';
+import { RODOKU_STORIES, RodokuTextItem, formatRodokuHtml } from '@/lib/data/rodokuModuleData';
 
 function formatTimer(totalSeconds: number): string {
   const hrs = Math.floor(totalSeconds / 3600);
@@ -69,7 +70,6 @@ function createSyntheticWav(durationSeconds: number): Blob {
   let offset = 44;
   for (let i = 0; i < numSamples; i++, offset += 2) {
     const t = i / sampleRate;
-    // Pleasant melodic vocal formant harmonic simulation
     const val = 0.15 * Math.sin(2 * Math.PI * 349.23 * t) * Math.exp(-t / (Math.max(1, durationSeconds) * 0.8));
     const s = Math.max(-1, Math.min(1, val));
     view.setInt16(offset, s < 0 ? s * 0x8000 : s * 0x7fff, true);
@@ -82,12 +82,8 @@ export default function RodokuLombaPage() {
   const router = useRouter();
   const { practiceSets, submitPracticeResult } = useAppStore();
 
-  const rodokuSets = practiceSets.filter((s) => s.category === 'rodoku');
-  const activeSet = rodokuSets[0] || {
-    id: 'set-rodoku-1',
-    title: 'Naskah Rodoku Lomba: 『手袋を買いに』 (Membeli Sarung Tangan)',
-    audio_reference_url: 'https://actions.google.com/sounds/v1/weather/winter_wind.ogg',
-  };
+  const [selectedStoryId, setSelectedStoryId] = useState<string>(RODOKU_STORIES[0].id);
+  const activeStory = RODOKU_STORIES.find((s) => s.id === selectedStoryId) || RODOKU_STORIES[0];
 
   // Text presentation controls
   const [fontSize, setFontSize] = useState<'md' | 'lg' | 'xl'>('lg');
@@ -122,6 +118,19 @@ export default function RodokuLombaPage() {
   const studentAudioElementRef = useRef<HTMLAudioElement | null>(null);
   const senseiAudioElementRef = useRef<HTMLAudioElement | null>(null);
 
+  // Switch story handler
+  const handleSelectStory = (storyId: string) => {
+    setSelectedStoryId(storyId);
+    setRecordedAudioUrl(null);
+    setIsSavedTake(false);
+    if (senseiAudioElementRef.current) senseiAudioElementRef.current.pause();
+    if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
+      window.speechSynthesis.cancel();
+    }
+    setIsPlayingSensei(false);
+    setIsPlayingStudent(false);
+  };
+
   // Clean up object URLs and timers on unmount
   useEffect(() => {
     return () => {
@@ -130,13 +139,31 @@ export default function RodokuLombaPage() {
       if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
         window.speechSynthesis.cancel();
       }
+      if (senseiAudioElementRef.current) {
+        senseiAudioElementRef.current.pause();
+      }
     };
   }, [recordedAudioUrl]);
 
-  // Full reading text for speech synthesis
-  const fullStoryText = `寒い冬がやってきました。夜になると、北風がピューピューと吹いて、森の木々を揺らしました。小さな子狐は、初めて見る白い雪に目を丸くして、お母さん狐に駆け寄りました。「お母さん、手が冷たいよ。ちくちく痛いよ。」お母さん狐は、愛おしそうに子狐の小さな手を包み込みました。`;
+  // Speech synthesis fallback helper
+  const playWithSpeechSynthesis = useCallback(() => {
+    if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
+      window.speechSynthesis.cancel();
+      const utterance = new SpeechSynthesisUtterance(activeStory.fullStoryRaw);
+      utterance.lang = 'ja-JP';
+      utterance.rate = 0.92; // Serene, dignified reading tempo
+      utterance.pitch = 1.0;
+      utterance.onend = () => setIsPlayingSensei(false);
+      utterance.onerror = () => setIsPlayingSensei(false);
+      window.speechSynthesis.speak(utterance);
+    } else {
+      setTimeout(() => {
+        setIsPlayingSensei(false);
+      }, activeStory.targetDurationSeconds * 1000);
+    }
+  }, [activeStory.fullStoryRaw, activeStory.targetDurationSeconds]);
 
-  // Toggle Sensei Audio Reference
+  // Toggle Sensei / Native Audio Reference
   const handleToggleSenseiAudio = useCallback(() => {
     if (typeof window === 'undefined') return;
 
@@ -147,32 +174,32 @@ export default function RodokuLombaPage() {
     }
 
     if (isPlayingSensei) {
-      if ('speechSynthesis' in window) window.speechSynthesis.cancel();
       if (senseiAudioElementRef.current) senseiAudioElementRef.current.pause();
+      if ('speechSynthesis' in window) window.speechSynthesis.cancel();
       setIsPlayingSensei(false);
       return;
     }
 
     setIsPlayingSensei(true);
 
-    if ('speechSynthesis' in window) {
-      window.speechSynthesis.cancel();
-      const utterance = new SpeechSynthesisUtterance(fullStoryText);
-      utterance.lang = 'ja-JP';
-      utterance.rate = 0.92; // Serene, dignified reading tempo
-      utterance.pitch = 1.0;
+    // 1. Play real Native Japanese voice file if available
+    if (activeStory.audioReferenceUrl) {
+      if (senseiAudioElementRef.current) senseiAudioElementRef.current.pause();
+      const audio = new Audio(activeStory.audioReferenceUrl);
+      senseiAudioElementRef.current = audio;
 
-      utterance.onend = () => setIsPlayingSensei(false);
-      utterance.onerror = () => setIsPlayingSensei(false);
-
-      window.speechSynthesis.speak(utterance);
-    } else {
-      // Fallback timer simulation
-      setTimeout(() => {
-        setIsPlayingSensei(false);
-      }, 8000);
+      audio.onended = () => setIsPlayingSensei(false);
+      audio.onerror = () => {
+        playWithSpeechSynthesis();
+      };
+      audio.play().catch(() => {
+        playWithSpeechSynthesis();
+      });
+      return;
     }
-  }, [isPlayingSensei]);
+
+    playWithSpeechSynthesis();
+  }, [isPlayingSensei, activeStory.audioReferenceUrl, playWithSpeechSynthesis]);
 
   // Start recording
   const handleStartRecording = async () => {
@@ -298,13 +325,13 @@ export default function RodokuLombaPage() {
   // Complete self practice session
   const handleCompleteSelfPractice = () => {
     submitPracticeResult({
-      set_id: activeSet.id,
+      set_id: activeStory.id,
       category: 'rodoku',
       score: null, // Reading aloud evaluated holistically
       total_questions: 1,
       correct_answers: 1,
       time_spent_seconds: recordingSeconds > 0 ? recordingSeconds : 150,
-      set_title: activeSet.title,
+      set_title: `${activeStory.titleKanji} (${activeStory.title})`,
       type: 'voice_practiced',
     });
 
@@ -327,7 +354,8 @@ export default function RodokuLombaPage() {
     <div className="space-y-4 pb-12 text-sumi">
       {/* Scoped CSS rule for furigana color and toggle */}
       <style dangerouslySetInnerHTML={{ __html: `
-        ruby rt { color: #B91C1C; font-size: 0.55em; font-weight: 500; }
+        ruby rt { color: #B91C1C; font-size: 0.58em; font-weight: 600; line-height: 1; }
+        ruby { ruby-align: center; ruby-position: over; }
         ${!showFurigana ? 'ruby rt { display: none !important; }' : ''}
       ` }} />
 
@@ -360,8 +388,37 @@ export default function RodokuLombaPage() {
 
           <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-crimson-subtle/40 border border-crimson/20 text-crimson text-[11px] font-bold">
             <Lock className="w-3.5 h-3.5" />
-            <span>Mode Workbench Interaktif • Satu Layar Pandang</span>
+            <span>Mode Workbench Interaktif • Prototype Suara Nihonjin Asli</span>
           </div>
+        </div>
+
+        {/* Baris 1.5: Pilihan 5 Karya Sastra Rodoku */}
+        <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-none pt-1">
+          <span className="text-[11px] font-bold text-sumi-charcoal shrink-0 flex items-center gap-1">
+            <BookOpen className="w-3.5 h-3.5 text-crimson" />
+            <span>Pilih Naskah Sastra:</span>
+          </span>
+          {RODOKU_STORIES.map((story) => {
+            const isSelected = selectedStoryId === story.id;
+            return (
+              <button
+                key={story.id}
+                onClick={() => handleSelectStory(story.id)}
+                className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all shrink-0 flex items-center gap-1.5 border ${
+                  isSelected
+                    ? 'bg-crimson text-white border-crimson shadow-sm'
+                    : 'bg-[#FAF7F2] text-sumi-charcoal border-sumi-border hover:bg-[#F5EFE6] hover:text-sumi'
+                }`}
+              >
+                <span>{story.titleKanji}</span>
+                <span className={`text-[10px] px-1.5 py-0.2 rounded-md ${
+                  isSelected ? 'bg-white/20 text-white' : 'bg-sumi-muted/20 text-sumi-charcoal'
+                }`}>
+                  {story.author}
+                </span>
+              </button>
+            );
+          })}
         </div>
 
         {/* Baris 2: Judul Naskah & Interactive Controls Toolbar */}
@@ -370,11 +427,11 @@ export default function RodokuLombaPage() {
             <div className="flex items-center gap-2">
               <BookOpen className="w-4 h-4 text-crimson" />
               <h1 className="text-base sm:text-lg font-black text-sumi">
-                Teks Latihan: <span className="text-crimson font-serif">『手袋を買いに』</span> (Niimi Nankichi) • Tingkat N4–N3
+                Teks Latihan: <span className="text-crimson font-serif">{activeStory.titleKanji}</span> ({activeStory.author})
               </h1>
             </div>
             <p className="text-xs text-sumi-charcoal">
-              Pelafalan sastra klasik Jepang • Fokus: <span className="font-medium text-sumi">Artikulasi, Jeda Napas (Ma), & Intonasi Baku</span>
+              {activeStory.description} • Tempo: <span className="font-medium text-sumi">{activeStory.tempo}</span>
             </p>
           </div>
 
@@ -491,25 +548,30 @@ export default function RodokuLombaPage() {
               </h2>
             </div>
             <span className="text-[11px] font-bold text-sumi-charcoal bg-[#FAF7F2] px-2.5 py-0.5 rounded-full border border-sumi-border">
-              Niimi Nankichi • 4 Paragraf Inti
+              {activeStory.author} • {activeStory.genre}
             </span>
           </div>
 
           {/* Reading Container with Isolated Vertical Scroll (Zero Global Scroll) */}
           <div className="p-4 sm:p-6 rounded-xl bg-[#FAF7F2]/75 border border-[#EBE4D8] max-h-[520px] overflow-y-auto pr-3 space-y-5 select-text">
             {/* Romaji Title Header */}
-            <div className="border-b border-[#E3DACB] pb-2 mb-3">
-              <span className="text-xs font-mono font-bold tracking-widest text-sumi-muted uppercase block">
-                RODOKU PIECE 01
+            <div className="border-b border-[#E3DACB] pb-2 mb-3 flex items-center justify-between flex-wrap gap-2">
+              <div>
+                <span className="text-xs font-mono font-bold tracking-widest text-sumi-muted uppercase block">
+                  {activeStory.genre}
+                </span>
+                <h3 className="text-base sm:text-lg font-black tracking-wider text-sumi font-sans">
+                  {activeStory.titleKanji} — {activeStory.title}
+                </h3>
+              </div>
+              <span className="text-xs font-bold text-sumi-charcoal bg-white px-2.5 py-1 rounded-lg border border-sumi-border shadow-xs">
+                Karya: {activeStory.authorKanji} ({activeStory.author})
               </span>
-              <h3 className="text-base sm:text-lg font-black tracking-wider text-sumi font-sans">
-                TEBUKURO WO KAI NI
-              </h3>
             </div>
 
             {/* Semantic Ruby Furigana Story Text */}
             <div
-              className={`font-jp font-bold text-sumi leading-[2.6] sm:leading-[2.8] space-y-5 tracking-wide ${
+              className={`font-jp font-bold text-sumi leading-[2.6] sm:leading-[2.8] space-y-4 tracking-wide ${
                 fontSize === 'md'
                   ? 'text-base sm:text-lg'
                   : fontSize === 'lg'
@@ -517,65 +579,17 @@ export default function RodokuLombaPage() {
                   : 'text-xl sm:text-[22px]'
               }`}
             >
-              {/* Paragraf 1 */}
-              <p className="bg-white/70 p-3 rounded-lg border border-sumi-border/40 shadow-2xs">
-                <ruby>寒<rt>さむ</rt></ruby>い
-                <ruby>冬<rt>ふゆ</rt></ruby>がやってきました。
-                {showPauses && <span className="text-crimson font-black mx-1.5 px-1 py-0.2 rounded bg-crimson-tint/50 text-[0.9em]">/</span>}
-                <ruby>夜<rt>よる</rt></ruby>になると、
-                {showPauses && <span className="text-crimson font-black mx-2 px-1.5 py-0.5 rounded bg-crimson-tint/70 text-[0.85em] border border-crimson/20">//</span>}
-                <ruby>北風<rt>きたかぜ</rt></ruby>がピューピューと
-                <ruby>吹<rt>ふ</rt></ruby>いて、
-                {showPauses && <span className="text-crimson font-black mx-1.5 px-1 py-0.2 rounded bg-crimson-tint/50 text-[0.9em]">/</span>}
-                <ruby>森<rt>もり</rt></ruby>の
-                <ruby>木々<rt>きぎ</rt></ruby>を
-                <ruby>揺<rt>ゆ</rt></ruby>らしました。
-                {showPauses && <span className="text-crimson font-black mx-2 px-1.5 py-0.5 rounded bg-crimson-tint/70 text-[0.85em] border border-crimson/20">//</span>}
-              </p>
+              {activeStory.rubyHtml.split(/<br\s*\/?>/i).map((paraHtml, pIdx) => {
+                const cleanHtml = formatRodokuHtml(paraHtml, showPauses, showFurigana);
 
-              {/* Paragraf 2 */}
-              <p className="bg-white/70 p-3 rounded-lg border border-sumi-border/40 shadow-2xs">
-                <ruby>小<rt>ちい</rt></ruby>さな
-                <ruby>子狐<rt>こぎつね</rt></ruby>は、
-                {showPauses && <span className="text-crimson font-black mx-1.5 px-1 py-0.2 rounded bg-crimson-tint/50 text-[0.9em]">/</span>}
-                <ruby>初<rt>はじ</rt></ruby>めて
-                <ruby>見<rt>み</rt></ruby>る
-                <ruby>白<rt>しろ</rt></ruby>い
-                <ruby>雪<rt>ゆき</rt></ruby>に
-                <ruby>目<rt>め</rt></ruby>を
-                <ruby>丸<rt>まる</rt></ruby>くして、
-                {showPauses && <span className="text-crimson font-black mx-1.5 px-1 py-0.2 rounded bg-crimson-tint/50 text-[0.9em]">/</span>}
-                お<ruby>母<rt>かあ</rt></ruby>さん
-                <ruby>狐<rt>ぎつね</rt></ruby>に
-                <ruby>駆<rt>か</rt></ruby>け
-                <ruby>寄<rt>よ</rt></ruby>りました。
-                {showPauses && <span className="text-crimson font-black mx-2 px-1.5 py-0.5 rounded bg-crimson-tint/70 text-[0.85em] border border-crimson/20">//</span>}
-              </p>
-
-              {/* Paragraf 3 */}
-              <p className="bg-white/70 p-3 rounded-lg border border-sumi-border/40 shadow-2xs">
-                「お<ruby>母<rt>かあ</rt></ruby>さん、
-                {showPauses && <span className="text-crimson font-black mx-1.5 px-1 py-0.2 rounded bg-crimson-tint/50 text-[0.9em]">/</span>}
-                <ruby>手<rt>て</rt></ruby>が
-                <ruby>冷<rt>つめ</rt></ruby>たいよ。
-                {showPauses && <span className="text-crimson font-black mx-1.5 px-1 py-0.2 rounded bg-crimson-tint/50 text-[0.9em]">/</span>}
-                ちくちく<ruby>痛<rt>いた</rt></ruby>いよ。」
-                {showPauses && <span className="text-crimson font-black mx-2 px-1.5 py-0.5 rounded bg-crimson-tint/70 text-[0.85em] border border-crimson/20">//</span>}
-              </p>
-
-              {/* Paragraf 4 */}
-              <p className="bg-white/70 p-3 rounded-lg border border-sumi-border/40 shadow-2xs">
-                お<ruby>母<rt>かあ</rt></ruby>さん
-                <ruby>狐<rt>ぎつね</rt></ruby>は、
-                {showPauses && <span className="text-crimson font-black mx-1.5 px-1 py-0.2 rounded bg-crimson-tint/50 text-[0.9em]">/</span>}
-                <ruby>愛<rt>いとお</rt></ruby>しそうに
-                <ruby>子狐<rt>こぎつね</rt></ruby>の
-                <ruby>小<rt>ちい</rt></ruby>さな
-                <ruby>手<rt>て</rt></ruby>を
-                <ruby>包<rt>つつ</rt></ruby>み
-                <ruby>込<rt>こ</rt></ruby>みました。
-                {showPauses && <span className="text-crimson font-black mx-2 px-1.5 py-0.5 rounded bg-crimson-tint/70 text-[0.85em] border border-crimson/20">//</span>}
-              </p>
+                return (
+                  <p
+                    key={pIdx}
+                    dangerouslySetInnerHTML={{ __html: cleanHtml }}
+                    className="bg-white/80 p-3.5 sm:p-4 rounded-xl border border-sumi-border/50 shadow-2xs leading-[2.8]"
+                  />
+                );
+              })}
             </div>
           </div>
 
@@ -756,7 +770,7 @@ export default function RodokuLombaPage() {
                 ) : (
                   <>
                     <Play className="w-3.5 h-3.5 fill-current" />
-                    <span>Model Sensei</span>
+                    <span>Suara Nihonjin Asli</span>
                   </>
                 )}
               </button>
@@ -862,7 +876,7 @@ export default function RodokuLombaPage() {
                 Pelafalan Luar Biasa!
               </h3>
               <p className="text-xs sm:text-sm text-sumi-charcoal leading-relaxed">
-                Anda telah menyelesaikan latihan membaca nyaring (*reading aloud*) naskah sastra klasik <strong>『手袋を買いに』</strong>.
+                Anda telah menyelesaikan latihan membaca nyaring (*reading aloud*) naskah sastra klasik <strong>{activeStory.titleKanji} ({activeStory.title})</strong>.
               </p>
             </div>
 

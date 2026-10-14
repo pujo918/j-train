@@ -84,8 +84,9 @@ export default function SeiyuLombaPage() {
   const router = useRouter();
   const { submitPracticeResult } = useAppStore();
 
-  const currentScene = SEIYU_SCENES[0];
-  const [selectedCharacterFilter, setSelectedCharacterFilter] = useState<'all' | 'Kenji' | 'Aoi' | 'Sensei'>('Kenji');
+  const [selectedSceneId, setSelectedSceneId] = useState<string>(SEIYU_SCENES[0].id);
+  const currentScene = SEIYU_SCENES.find((s) => s.id === selectedSceneId) || SEIYU_SCENES[0];
+  const [selectedCharacterFilter, setSelectedCharacterFilter] = useState<string>('all');
   const [activeLineId, setActiveLineId] = useState<string>(currentScene.dialogues[0].id);
   
   // Recording state
@@ -113,6 +114,24 @@ export default function SeiyuLombaPage() {
 
   const activeLine = currentScene.dialogues.find((d) => d.id === activeLineId) || currentScene.dialogues[0];
 
+  // Handle switching scenes
+  const handleSelectScene = (sceneId: string) => {
+    setSelectedSceneId(sceneId);
+    const newScene = SEIYU_SCENES.find((s) => s.id === sceneId) || SEIYU_SCENES[0];
+    setActiveLineId(newScene.dialogues[0].id);
+    setSelectedCharacterFilter('all');
+    setRecordedAudioUrl(null);
+    setIsSavedTake(false);
+    if (senseiAudioElementRef.current) {
+      senseiAudioElementRef.current.pause();
+    }
+    if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
+      window.speechSynthesis.cancel();
+    }
+    setPlayingSenseiLineId(null);
+    setIsPlayingSenseiModel(false);
+  };
+
   // Clean up object URLs and timers on unmount
   useEffect(() => {
     return () => {
@@ -121,39 +140,28 @@ export default function SeiyuLombaPage() {
       if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
         window.speechSynthesis.cancel();
       }
+      if (senseiAudioElementRef.current) {
+        senseiAudioElementRef.current.pause();
+      }
     };
   }, [recordedAudioUrl]);
 
-  // Handle Sensei reference speech (Web Speech API with authentic Japanese voice)
-  const handlePlaySenseiAudio = useCallback((line: SeiyuDialogueLine, isFromModelButton = false) => {
-    if (typeof window === 'undefined') return;
-
-    // Stop student audio if playing
-    if (studentAudioElementRef.current) {
-      studentAudioElementRef.current.pause();
-      setIsPlayingStudentTake(false);
-    }
-
-    if (playingSenseiLineId === line.id || (isFromModelButton && isPlayingSenseiModel)) {
-      if ('speechSynthesis' in window) window.speechSynthesis.cancel();
-      setPlayingSenseiLineId(null);
-      setIsPlayingSenseiModel(false);
-      return;
-    }
-
-    setPlayingSenseiLineId(line.id);
-    if (isFromModelButton) setIsPlayingSenseiModel(true);
-
-    if ('speechSynthesis' in window) {
+  // Fallback speech synthesis helper
+  const playWithSpeechSynthesis = useCallback((line: SeiyuDialogueLine) => {
+    if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
       window.speechSynthesis.cancel();
       const cleanText = line.japaneseTextRaw.replace(/[「」『』]/g, '');
       const utterance = new SpeechSynthesisUtterance(cleanText);
       utterance.lang = 'ja-JP';
-      // Pitch adjustment based on character
-      if (line.characterKey === 'Kenji') utterance.pitch = 1.05;
-      else if (line.characterKey === 'Aoi') utterance.pitch = 1.25;
-      else utterance.pitch = 0.85;
-
+      if (line.characterKey === 'Kenji' || line.characterKey === 'Kaito' || line.characterKey === 'Shinichi') {
+        utterance.pitch = 1.05;
+      } else if (line.characterKey === 'Aoi' || line.characterKey === 'Hina' || line.characterKey === 'Yuki') {
+        utterance.pitch = 1.25;
+      } else if (line.characterKey === 'Maou' || line.characterKey === 'Sensei') {
+        utterance.pitch = 0.8;
+      } else {
+        utterance.pitch = 1.0;
+      }
       utterance.rate = 0.95;
 
       utterance.onend = () => {
@@ -168,13 +176,61 @@ export default function SeiyuLombaPage() {
 
       window.speechSynthesis.speak(utterance);
     } else {
-      // Fallback timer simulation
       setTimeout(() => {
         setPlayingSenseiLineId(null);
         setIsPlayingSenseiModel(false);
       }, line.targetDurationSeconds * 1000);
     }
-  }, [playingSenseiLineId, isPlayingSenseiModel]);
+  }, []);
+
+  // Handle Seiyu reference audio (Real Native Japanese Audio with Web Speech API fallback)
+  const handlePlaySenseiAudio = useCallback((line: SeiyuDialogueLine, isFromModelButton = false) => {
+    if (typeof window === 'undefined') return;
+
+    // Stop student audio if playing
+    if (studentAudioElementRef.current) {
+      studentAudioElementRef.current.pause();
+      setIsPlayingStudentTake(false);
+    }
+
+    if (playingSenseiLineId === line.id || (isFromModelButton && isPlayingSenseiModel)) {
+      if (senseiAudioElementRef.current) {
+        senseiAudioElementRef.current.pause();
+      }
+      if ('speechSynthesis' in window) window.speechSynthesis.cancel();
+      setPlayingSenseiLineId(null);
+      setIsPlayingSenseiModel(false);
+      return;
+    }
+
+    setPlayingSenseiLineId(line.id);
+    if (isFromModelButton) setIsPlayingSenseiModel(true);
+
+    // 1. Play authentic Native Japanese audio file if present
+    if (line.audioUrl) {
+      if (senseiAudioElementRef.current) {
+        senseiAudioElementRef.current.pause();
+      }
+      const audio = new Audio(line.audioUrl);
+      senseiAudioElementRef.current = audio;
+
+      audio.onended = () => {
+        setPlayingSenseiLineId(null);
+        setIsPlayingSenseiModel(false);
+      };
+
+      audio.onerror = () => {
+        playWithSpeechSynthesis(line);
+      };
+
+      audio.play().catch(() => {
+        playWithSpeechSynthesis(line);
+      });
+      return;
+    }
+
+    playWithSpeechSynthesis(line);
+  }, [playingSenseiLineId, isPlayingSenseiModel, playWithSpeechSynthesis]);
 
   // Start recording
   const handleStartRecording = async () => {
@@ -366,8 +422,38 @@ export default function SeiyuLombaPage() {
 
           <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-crimson-subtle/40 border border-crimson/20 text-crimson text-[11px] font-bold">
             <Lock className="w-3.5 h-3.5" />
-            <span>Mode Studio Interaktif • Take Per Adegan</span>
+            <span>Mode Studio Interaktif • Prototype Suara Nihonjin Asli</span>
           </div>
+        </div>
+
+        {/* Baris 1.5: Pilihan 5 Naskah Anime Berbeda Genre */}
+        <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-none pt-1">
+          <span className="text-[11px] font-bold text-sumi-charcoal shrink-0 flex items-center gap-1">
+            <Film className="w-3.5 h-3.5 text-crimson" />
+            <span>Pilih Naskah Anime:</span>
+          </span>
+          {SEIYU_SCENES.map((scene) => {
+            const isSelected = selectedSceneId === scene.id;
+            const shortName = scene.title.match(/『(.*?)』/)?.[1] || scene.title;
+            return (
+              <button
+                key={scene.id}
+                onClick={() => handleSelectScene(scene.id)}
+                className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all shrink-0 flex items-center gap-1.5 border ${
+                  isSelected
+                    ? 'bg-crimson text-white border-crimson shadow-sm'
+                    : 'bg-[#FAF7F2] text-sumi-charcoal border-sumi-border hover:bg-[#F5EFE6] hover:text-sumi'
+                }`}
+              >
+                <span>『{shortName}』</span>
+                <span className={`text-[10px] px-1.5 py-0.2 rounded-md ${
+                  isSelected ? 'bg-white/20 text-white' : 'bg-sumi-muted/20 text-sumi-charcoal'
+                }`}>
+                  {scene.genre}
+                </span>
+              </button>
+            );
+          })}
         </div>
 
         {/* Baris 2: Judul Naskah Adegan & Pill Filter Karakter Interaktif */}
@@ -402,7 +488,7 @@ export default function SeiyuLombaPage() {
               Semua
             </button>
 
-            {(['Kenji', 'Aoi', 'Sensei'] as const).map((char) => {
+            {currentScene.characterFilterKeys.map((char) => {
               const isActive = selectedCharacterFilter === char;
               return (
                 <button
@@ -506,7 +592,7 @@ export default function SeiyuLombaPage() {
                         }`}
                       >
                         <Volume2 className="w-3 h-3" />
-                        <span>{isPlayingThisLine ? 'Memutar Model...' : 'Dengarkan Contoh Sensei'}</span>
+                        <span>{isPlayingThisLine ? 'Memutar Suara...' : 'Dengarkan Suara Nihonjin'}</span>
                       </button>
                     </div>
                   </div>

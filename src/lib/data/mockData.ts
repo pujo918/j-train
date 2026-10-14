@@ -115,11 +115,11 @@ export const INITIAL_PRACTICE_SETS: PracticeSet[] = [
     description: "Simulasi menyimak terkunci (Exam Mode: tanpa scrubbing bebas, audio dibatasi 2x putar). Menuntut ketelitian mendengar instruksi.",
     difficulty_level: "Menengah (N4)",
     duration_minutes: 8,
-    audio_reference_url: "https://actions.google.com/sounds/v1/ambiences/train_station.ogg",
+    audio_reference_url: "/audio/kikikakitori/set1.mp3",
     is_published: true,
     created_by: "user-sensei",
     created_at: "2026-09-14T08:00:00Z",
-    questions_count: 3,
+    questions_count: 5,
   },
 
   // 4. RODOKU
@@ -130,7 +130,7 @@ export const INITIAL_PRACTICE_SETS: PracticeSet[] = [
     description: "Pelafalan teks sastra Jepang dengan kejelasan artikulasi, jeda napas (/), intonasi tepat, dan perbandingan audio rekaman Sensei.",
     difficulty_level: "Menengah (N4)",
     duration_minutes: 0,
-    audio_reference_url: "https://actions.google.com/sounds/v1/weather/winter_wind.ogg",
+    audio_reference_url: "/audio/rodoku/set1.mp3",
     script_content: `寒い冬がやってきました。/
 夜になると、// 北風がピューピューと吹いて、/ 森の木々を揺らしました。//
 小さな子狐は、/ 初めて見る白い雪に目を丸くして、/ お母さん狐に駆け寄りました。//
@@ -149,7 +149,7 @@ export const INITIAL_PRACTICE_SETS: PracticeSet[] = [
     description: "Latihan karakterisasi suara, modulasi emosi (marah/berbisik/lantang), dan sinkronisasi tempo bicara (lip-sync tempo).",
     difficulty_level: "Menengah (N4)",
     duration_minutes: 0,
-    audio_reference_url: "https://actions.google.com/sounds/v1/sports/stadium_cheer.ogg",
+    audio_reference_url: "/audio/seiyu/s1_line1.mp3",
     script_content: `[Kenji - Nafas tersengal, tekad bulat]:
 「諦めるな！僕たちが毎日積み重ねてきた努力は、絶対に裏切らない！」/
 

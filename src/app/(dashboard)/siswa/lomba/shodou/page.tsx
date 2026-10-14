@@ -231,9 +231,11 @@ export default function ShodouLombaPage() {
                 onChange={(e) => setSelectedModelKey(e.target.value)}
                 className="appearance-none bg-[#FAF7F2] hover:bg-[#F5EFE6] border border-[#E5DEC9] text-[#111827] text-xs sm:text-[13px] font-bold py-1.5 pl-3 pr-8 rounded-xl focus:outline-none focus:ring-2 focus:ring-crimson/30 transition-all cursor-pointer shadow-sm font-jp"
               >
-                <option value="michi">『道』 (Jalan / Kehidupan)</option>
-                <option value="yume">『夢』 (Impian / Cita-cita)</option>
-                <option value="wa">『和』 (Harmoni / Damai)</option>
+                {Object.entries(KANJI_MODELS).map(([key, model]) => (
+                  <option key={key} value={key}>
+                    『{model.name}』 ({model.meaning})
+                  </option>
+                ))}
               </select>
               <ChevronDown className="w-3.5 h-3.5 text-[#6B7280] absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
             </div>

@@ -45,7 +45,7 @@ export const KANJI_MODELS: Record<string, KanjiModel> = {
       { title: 'Penutup Bawah 目', desc: 'Garis horizontal pengunci bagian dasar radikal mata.' },
       { title: 'Titik Awal Shinnyou (⻌)', desc: 'Mulai radikal jalan dengan titik melengkung di sisi kiri.' },
       { title: 'Lekukan Gelombang Shinnyou', desc: 'Bentuk lekukan zigzag halus mengalir (Z-stroke) dengan kontrol tekanan.' },
-      { title: 'Sapuan Bawah (Harai Besar)', desc: 'Tekan kuas di bagian bawah membungkus seluruh karakter, lalu sapukan melebar meruncing ke kanan (Hirai agung).' }
+      { title: 'Sapuan Bawah (Harai Besar)', desc: 'Tekan kuas di bagian bawah membungkus seluruh karakter, lalu sapukan melebar meruncing ke kanan (Harai agung).' }
     ]
   },
   yume: {
@@ -106,6 +106,74 @@ export const KANJI_MODELS: Record<string, KanjiModel> = {
       { title: 'Garis Vertikal Mulut (口)', desc: 'Pondasi kiri kotak mulut tegak lurus.' },
       { title: 'Sudut Kanan Mulut (口)', desc: 'Garis horizontal lalu tekukan ke bawah tajam.' },
       { title: 'Penutup Bawah Mulut (口)', desc: 'Kunci dasar kotak mulut dengan kedua ujung sedikit menonjol.' }
+    ]
+  },
+  chikara: {
+    code: '0529b',
+    name: '力',
+    meaning: 'Kekuatan / Semangat Juang',
+    strokes: [
+      { d: 'M36.25,26c1.25,0.75,3.25,1,4.5,0.75c9.25-1.75,27.25-5,32.75-5.5c4-0.36,5.5,1.75,5,5.25c-1.5,10.25-7.75,44.75-14.75,56c-4.75,7.63-7.75,1.25-9-0.75', type: '㇆' },
+      { d: 'M51.5,10.75c1.25,1.25,1.6,2.75,1.65,4.75c0.47,21.65-4.4,60.25-34.4,76.5', type: '㇒' }
+    ],
+    steps: [
+      { title: 'Sudut Lengkung & Hane (Tekuk Melenting)', desc: 'Tarik horizontal ke kanan, tekuk tajam ke bawah sedikit condong ke kiri, lalu lentikkan kuas ke kiri atas dengan hentakan tajam.' },
+      { title: 'Sapuan Harai Menembus Tengah', desc: 'Mulai dari puncak poros tengah, sapukan kuas ke kiri bawah membentang meruncing megah memotong goresan pertama.' }
+    ]
+  },
+  kokoro: {
+    code: '05fc3',
+    name: '心',
+    meaning: 'Hati / Jiwa / Niat Murni',
+    strokes: [
+      { d: 'M26.25,48.25c0.25,1.75-0.75,3.88-1.75,5.25c-3.25,4.5-7.25,8.75-13.75,13.25', type: '㇔' },
+      { d: 'M39,36.5c1.25,1.25,1.75,2.75,1.75,4.75c0,13.25-0.75,24.25,18.75,25.25c12,0.62,17.25-3,19.25-10.75', type: '㇟' },
+      { d: 'M56.25,31.75c2.75,2.75,6.5,7.5,7.75,11.25', type: '㇔' },
+      { d: 'M78.75,36c3.25,2.5,7.5,6.75,9.25,10.5', type: '㇔' }
+    ],
+    steps: [
+      { title: 'Titik Kiri Luar (Tome Miring)', desc: 'Titik miring mantap di sisi kiri bawah kanvas, beri penekanan di ujung.' },
+      { title: 'Lengkungan Harai Melingkar (Perut Hati)', desc: 'Mulai tegak, sapukan melengkung ke kanan bawah seperti mangkuk dasar, lalu lentikkan ujung kuas ke atas.' },
+      { title: 'Titik Tengah Atas', desc: 'Titik gantung di atas rongga perut hati, melayang harmonis di poros tengah.' },
+      { title: 'Titik Kanan Luar', desc: 'Titik penyeimbang di sisi kanan atas, letaknya sedikit lebih tinggi dari titik pertama.' }
+    ]
+  },
+  hikari: {
+    code: '05149',
+    name: '光',
+    meaning: 'Cahaya / Kemilau Prestasi',
+    strokes: [
+      { d: 'M52.75,12.75c1.12,1.12,1.38,2.38,1.38,3.75c0,8.25-0.12,16-0.12,21.5', type: '㇑' },
+      { d: 'M29.5,23.75c3.25,2.25,8.25,8.75,9.12,12.25', type: '㇔' },
+      { d: 'M79.25,20.25c0.12,1-0.25,2-0.75,2.75c-2.38,3.62-5.75,7.88-11.75,12.75', type: '㇒' },
+      { d: 'M18.25,48.5c2.5,0.75,5.25,0.48,7.75,0.25c14.75-1.38,44.25-4,60.5-4.75c2.62-0.12,5.25,0.12,7.75,0.75', type: '㇐' },
+      { d: 'M44.5,52.25c0.12,1-0.12,2-0.5,2.88c-3.12,6.88-12.38,21.38-27.25,29.38', type: '㇒' },
+      { d: 'M57.75,50c1.12,1.12,1.62,2.5,1.62,4.5c0,9.75-0.12,18.5,7.75,26.5c5.12,5.25,13.25,5.25,17.62,5.25c9.25,0,10.25-2.75,10.25-9.75', type: '㇟' }
+    ],
+    steps: [
+      { title: 'Tiang Tengah Puncak', desc: 'Goresan vertikal pendek tepat di sumbu tengah atas.' },
+      { title: 'Titik Kiri Puncak', desc: 'Titik miring kiri penyangga api cahaya.' },
+      { title: 'Sapuan Kanan Puncak', desc: 'Harai miring kanan lembut penyeimbang titik kiri.' },
+      { title: 'Garis Horizon Pembagi', desc: 'Garis horizontal panjang membentang dari kiri ke kanan dengan kekuatan penuh.' },
+      { title: 'Kaki Kiri (Sapuan Manusia)', desc: 'Goresan kaki kiri meruncing anggun ke kiri bawah.' },
+      { title: 'Kaki Kanan (Lengkungan Menanjak)', desc: 'Tarik melengkung ke kanan bawah lalu lentikkan kuas tegak ke atas mengunci keseimbangan.' }
+    ]
+  },
+  tomo: {
+    code: '053cb',
+    name: '友',
+    meaning: 'Sahabat / Persahabatan',
+    strokes: [
+      { d: 'M22.5,29.75c2.25,0.5,5.12,0.38,7.38,0.12c14.12-1.62,35.38-3.75,50.38-4.5c2.38-0.12,4.75,0.12,7.12,0.62', type: '㇐' },
+      { d: 'M48.25,12c0.38,1.12,0.5,2.62,0.12,4.25c-4.25,18.5-16.12,45.25-36.62,60.5', type: '㇒' },
+      { d: 'M38.75,44.75c1.88,0.75,3.88,0.62,5.88,0.25c6.38-1.12,22.12-3.88,26.25-4.5c3.25-0.5,4.75,1.75,3.5,4.5c-7.75,17.25-23.75,37.25-46.12,46.25', type: '㇇' },
+      { d: 'M34.5,53.25c6.25,4.38,28.62,24.62,44.62,34.5c3.25,2,6.5,3.75,10.12,4.88', type: '㇏' }
+    ],
+    steps: [
+      { title: 'Garis Horizontal Atas', desc: 'Tarik mendatar kokoh sedikit menanjak, simbol bahu yang bersanding.' },
+      { title: 'Sapuan Miring Panjang (Harai Kiri)', desc: 'Sapuan kuas miring melengkung memanjang dari atas ke kiri bawah dengan ketebalan menurun teratur.' },
+      { title: 'Lekukan Tangan Kanan (㇇)', desc: 'Horizontal pendek lalu belok miring ke kiri bawah membungkus ruang bawah.' },
+      { title: 'Sapuan Agung Kanan Bawah (㇏)', desc: 'Mulai dari persimpangan, tekan kuas makin tebal lalu sapukan melebar meruncing ke kanan bawah.' }
     ]
   }
 };
