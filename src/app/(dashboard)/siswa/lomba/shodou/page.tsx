@@ -68,11 +68,11 @@ export default function ShodouLombaPage() {
   const [isCompleted, setIsCompleted] = useState<boolean>(false);
   const [showToast, setShowToast] = useState<boolean>(false);
 
-  // Reset active stroke when model changes
+  // Reset active stroke to 1 when model changes
   useEffect(() => {
-    setActiveStroke(Math.min(4, currentModel.strokes.length));
+    setActiveStroke(1);
     setIsPlaying(false);
-  }, [selectedModelKey, currentModel.strokes.length]);
+  }, [selectedModelKey]);
 
   // Animation Interval Loop
   useEffect(() => {
@@ -321,8 +321,8 @@ export default function ShodouLombaPage() {
           <div className="w-full bg-[#FAF7F2] rounded-2xl border border-[#E8DFC9] p-2 sm:p-3 flex items-center justify-center relative shadow-inner overflow-hidden">
             {/* Hanshi Paper Frame Box */}
             <div className="relative w-full max-w-[300px] sm:max-w-[330px] aspect-[1/1] bg-[#FAF7F2] border-2 border-[#8B2332]/70 rounded-2xl shadow-[0_4px_16px_rgba(0,0,0,0.06)] flex items-center justify-center p-2.5 select-none">
-              {/* Rich Authentic Kaisho Calligraphy Font (Main Base Character) */}
-              <div className="absolute inset-0 flex items-center justify-center text-[160px] sm:text-[185px] font-black text-[#111827] select-none pointer-events-none font-jp leading-none tracking-tighter drop-shadow-sm">
+              {/* Faint Tehon Guide Watermark (Subtle Calligraphy Grid Guide) */}
+              <div className="absolute inset-0 flex items-center justify-center text-[150px] sm:text-[170px] font-black text-[#111827]/[0.035] select-none pointer-events-none font-jp leading-none tracking-tighter">
                 {currentModel.name}
               </div>
 
@@ -407,37 +407,71 @@ export default function ShodouLombaPage() {
                   </g>
                 )}
 
-                {/* 2. Active Stroke Highlight (Semi-transparent Crimson Sweep & Glow) */}
+                {/* 2. Future Guideline Strokes (Water-brush faint guide for upcoming strokes) */}
                 {currentModel.strokes.map((s, idx) => {
-                  if (idx + 1 === activeStroke) {
+                  const strokeNum = idx + 1;
+                  if (strokeNum > activeStroke) {
+                    return (
+                      <path
+                        key={`future-${idx}`}
+                        d={s.d}
+                        stroke="#94A3B8"
+                        strokeWidth="5"
+                        strokeDasharray="2 3"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        opacity="0.38"
+                      />
+                    );
+                  }
+                  return null;
+                })}
+
+                {/* 3. Completed Strokes (Deep Authentic Sumi Calligraphy Ink) */}
+                {currentModel.strokes.map((s, idx) => {
+                  const strokeNum = idx + 1;
+                  if (strokeNum < activeStroke) {
+                    return (
+                      <path
+                        key={`completed-${idx}`}
+                        d={s.d}
+                        stroke="#111827"
+                        strokeWidth="6.5"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      />
+                    );
+                  }
+                  return null;
+                })}
+
+                {/* 4. Active Stroke Highlight (Vivid Crimson Sweep, Aura, and Tome Indicator) */}
+                {currentModel.strokes.map((s, idx) => {
+                  const strokeNum = idx + 1;
+                  if (strokeNum === activeStroke) {
                     const start = getStartPoint(s.d);
+                    const isRightEdge = start.x > 82;
+                    const isBottomEdge = start.y > 82;
+
                     return (
                       <g key={`active-${idx}`}>
                         {/* Wide Crimson Aura / Glow */}
                         <path
                           d={s.d}
-                          stroke="rgba(185, 28, 28, 0.45)"
-                          strokeWidth="12"
+                          stroke="rgba(185, 28, 28, 0.35)"
+                          strokeWidth="13"
                           strokeLinecap="round"
                           strokeLinejoin="round"
                         />
-                        {/* Core Crimson Stroke Line */}
+                        {/* Core Active Crimson Stroke Line */}
                         <path
                           d={s.d}
                           stroke="#B91C1C"
-                          strokeWidth="5"
+                          strokeWidth="6.5"
                           strokeLinecap="round"
                           strokeLinejoin="round"
                         />
-                        {/* Start point marker (Tome origin indicator) */}
-                        <circle
-                          cx={start.x}
-                          cy={start.y}
-                          r="3"
-                          fill="#B91C1C"
-                          stroke="#FFFFFF"
-                          strokeWidth="1.2"
-                        />
+                        {/* Start point radar pulse */}
                         <circle
                           cx={start.x}
                           cy={start.y}
@@ -445,9 +479,42 @@ export default function ShodouLombaPage() {
                           fill="none"
                           stroke="#B91C1C"
                           strokeWidth="1"
-                          opacity="0.7"
+                          opacity="0.75"
                           className="animate-ping"
                         />
+                        {/* Start point marker (Tome origin indicator) */}
+                        <circle
+                          cx={start.x}
+                          cy={start.y}
+                          r="3.5"
+                          fill="#B91C1C"
+                          stroke="#FFFFFF"
+                          strokeWidth="1.2"
+                        />
+                        {/* Stroke number badge at stroke start */}
+                        <g transform={`translate(${isRightEdge ? start.x - 14 : start.x + 3}, ${isBottomEdge ? start.y - 12 : start.y - 4})`}>
+                          <rect
+                            x="0"
+                            y="0"
+                            width="11"
+                            height="11"
+                            rx="3"
+                            fill="#B91C1C"
+                            stroke="#FFFFFF"
+                            strokeWidth="0.8"
+                          />
+                          <text
+                            x="5.5"
+                            y="8"
+                            textAnchor="middle"
+                            fill="#FFFFFF"
+                            fontSize="7.5"
+                            fontWeight="bold"
+                            fontFamily="monospace"
+                          >
+                            {strokeNum}
+                          </text>
+                        </g>
                       </g>
                     );
                   }
@@ -473,7 +540,16 @@ export default function ShodouLombaPage() {
             <div className="flex items-center justify-center gap-1.5">
               <button
                 type="button"
-                onClick={() => setIsPlaying(!isPlaying)}
+                onClick={() => {
+                  if (isPlaying) {
+                    setIsPlaying(false);
+                  } else {
+                    if (activeStroke >= totalStrokes) {
+                      setActiveStroke(1);
+                    }
+                    setIsPlaying(true);
+                  }
+                }}
                 className={`h-8 px-3 rounded-xl font-bold text-xs flex items-center gap-1.5 transition-all shadow-sm ${
                   isPlaying
                     ? 'bg-[#111827] text-white hover:bg-black'
