@@ -63,17 +63,6 @@ Platform **J-TRAIN** dikembangkan untuk mengatasi kesenjangan struktural pembela
 
 ---
 
-## 5. Cara Menjalankan Aplikasi
-1. Buka terminal di direktori proyek:
-   ```bash
-   cd "C:\Users\Pujo Lestariono\.gemini\antigravity\scratch\j-train"
-   ```
-2. Jalankan development server:
-   ```bash
-   npm run dev
-   ```
-3. Buka browser pada [http://localhost:3000](http://localhost:3000).
-4. Untuk menguji database Supabase eksternal, masukkan kredensial pada file `.env.local`:
    ```env
    NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
    NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-key
