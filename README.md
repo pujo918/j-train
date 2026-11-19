@@ -61,10 +61,3 @@ Platform **J-TRAIN** dikembangkan untuk mengatasi kesenjangan struktural pembela
 4. **Live Activity Feed:**
    * Real-time stream aktivitas mandiri siswa saat belajar di ponsel/lab.
 
----
-
-   ```env
-   NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
-   NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-key
-   ```
-   Eksekusi skrip `supabase/schema.sql` pada SQL Editor Supabase Anda.
