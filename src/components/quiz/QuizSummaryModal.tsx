@@ -46,18 +46,18 @@ export const QuizSummaryModal: React.FC<QuizSummaryModalProps> = ({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-in fade-in duration-200">
-      <div className="bg-white rounded-3xl max-w-lg w-full p-6 sm:p-8 shadow-2xl border border-sumi-border text-center space-y-6 animate-in zoom-in-95 duration-150 relative">
+      <div className="bg-[#FDF9F1] rounded-3xl max-w-lg w-full p-6 sm:p-8 shadow-2xl border border-[#D8CBB8] text-center space-y-6 animate-in zoom-in-95 duration-150 relative">
         {/* Japanese Stamp / Award Badge */}
-        <div className="relative mx-auto w-24 h-24 rounded-3xl bg-washi border border-sumi-border flex items-center justify-center shadow-inner">
+        <div className="relative mx-auto w-24 h-24 rounded-3xl bg-[#F3EAD8] border border-[#DED2BE] flex items-center justify-center shadow-inner">
           <div
             className={`w-16 h-16 rounded-2xl flex items-center justify-center text-white font-black text-2xl shadow-sm ${
-              isPassed ? 'bg-crimson' : isModerate ? 'bg-amber-600' : 'bg-sumi-charcoal'
+              isPassed ? 'bg-crimson' : isModerate ? 'bg-amber-600' : 'bg-sumi'
             }`}
           >
             {score.toFixed(0)}
           </div>
-          <span className="absolute -top-2 -right-2 text-2xl">
-            {isPassed ? '🏆' : isModerate ? '🎖️' : '📝'}
+          <span className="absolute -top-2 -right-2 w-7 h-7 rounded-full bg-sumi text-white flex items-center justify-center shadow-md">
+            <Award className="w-4 h-4 text-amber-400" />
           </span>
         </div>
 

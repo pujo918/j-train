@@ -16,8 +16,7 @@ import {
   Plus, 
   Minus, 
   ChevronDown, 
-  ChevronRight, 
-  Home, 
+  ArrowLeft, 
   Sparkles, 
   Award, 
   CheckCircle2, 
@@ -32,9 +31,28 @@ export default function ShodouLombaPage() {
   const shodouSets = practiceSets.filter((s) => s.category === 'shodou');
   const activeSet = shodouSets[0];
 
-  // 1. Metadata Selectors State
+  // 1. Metadata Selectors State (83 Kanji ordered #1..#83)
+  const kanjiEntries = Object.entries(KANJI_MODELS);
   const [selectedModelKey, setSelectedModelKey] = useState<string>('michi');
-  const [selectedStyle, setSelectedStyle] = useState<string>('Kaisho (楷書) - Baku');
+  const currentKanjiIndex = Math.max(
+    0,
+    kanjiEntries.findIndex(([key]) => key === selectedModelKey)
+  );
+  const currentKanjiNumber = currentKanjiIndex + 1;
+  const [numberInput, setNumberInput] = useState<string>('1');
+
+  // Sync number input whenever model changes from dropdown
+  useEffect(() => {
+    setNumberInput(String(currentKanjiNumber));
+  }, [currentKanjiNumber]);
+
+  const handleJumpToNumber = (rawValue: string) => {
+    setNumberInput(rawValue);
+    const parsed = parseInt(rawValue, 10);
+    if (!Number.isNaN(parsed) && parsed >= 1 && parsed <= kanjiEntries.length) {
+      setSelectedModelKey(kanjiEntries[parsed - 1][0]);
+    }
+  };
 
   // Current Kanji Model Data
   const currentModel: KanjiModel = KANJI_MODELS[selectedModelKey] || KANJI_MODELS.michi;
@@ -42,16 +60,20 @@ export default function ShodouLombaPage() {
 
   // 2. Interactive Canvas State
   const [gridType, setGridType] = useState<'polos' | 'grid-4' | 'grid-9'>('grid-4');
-  const [activeStroke, setActiveStroke] = useState<number>(4); // Default 4 to match mockup
+  const [activeStroke, setActiveStroke] = useState<number>(1);
   const [isPlaying, setIsPlaying] = useState<boolean>(false);
   const [speed, setSpeed] = useState<number>(1); // 0.5x, 1x, 1.5x
+  const [strokeProgress, setStrokeProgress] = useState<number>(1);
+  const [brushTipPos, setBrushTipPos] = useState<{ x: number; y: number } | null>(null);
+  const activePathRef = useRef<SVGPathElement | null>(null);
+  const animTriggerRef = useRef<number>(0);
 
   // 3. Action Panel State
   const [activeTab, setActiveTab] = useState<'rubrik' | 'unggah'>('rubrik');
   const [statusSession, setStatusSession] = useState<string>('Akan Selesai [✓]');
   const [checklist, setChecklist] = useState({
-    tome: true,   // Default checked as in mockup
-    hane: true,   // Default checked as in mockup
+    tome: true,
+    hane: true,
     harai: false,
     balance: false,
     rakkan: false,
@@ -59,7 +81,7 @@ export default function ShodouLombaPage() {
   const [activeTooltip, setActiveTooltip] = useState<string | null>(null);
 
   // Unggah Karya State
-  const [sheetCount, setSheetCount] = useState<number>(2); // Default 2 as in mockup
+  const [sheetCount, setSheetCount] = useState<number>(2);
   const [uploadedPhoto, setUploadedPhoto] = useState<string | null>(null);
   const [photoFileName, setPhotoFileName] = useState<string>('');
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -72,25 +94,86 @@ export default function ShodouLombaPage() {
   useEffect(() => {
     setActiveStroke(1);
     setIsPlaying(false);
+    setStrokeProgress(1);
+    setBrushTipPos(null);
   }, [selectedModelKey]);
 
-  // Animation Interval Loop
+  // Update gliding brush-tip coordinate along active SVG path
   useEffect(() => {
-    let timer: NodeJS.Timeout;
-    if (isPlaying) {
-      const intervalMs = Math.round(850 / speed);
-      timer = setInterval(() => {
-        setActiveStroke((prev) => {
-          if (prev >= totalStrokes) {
-            setIsPlaying(false);
-            return totalStrokes;
-          }
-          return prev + 1;
-        });
-      }, intervalMs);
+    const pathEl = activePathRef.current;
+    if (!pathEl) {
+      setBrushTipPos(null);
+      return;
     }
-    return () => clearInterval(timer);
-  }, [isPlaying, speed, totalStrokes]);
+    try {
+      const totalLen = pathEl.getTotalLength();
+      if (totalLen > 0) {
+        const pt = pathEl.getPointAtLength(Math.min(1, Math.max(0, strokeProgress)) * totalLen);
+        setBrushTipPos({ x: pt.x, y: pt.y });
+      }
+    } catch {
+      setBrushTipPos(null);
+    }
+  }, [strokeProgress, activeStroke, selectedModelKey]);
+
+  // Smooth requestAnimationFrame Stroke Drawing Loop
+  useEffect(() => {
+    let rafId: number;
+    let pauseTimeout: NodeJS.Timeout;
+
+    const easeInOut = (t: number) =>
+      t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2;
+
+    if (isPlaying) {
+      const durationMs = Math.round(900 / speed);
+      const startTime = performance.now();
+      setStrokeProgress(0);
+
+      const tick = (now: number) => {
+        const rawT = Math.min(1, (now - startTime) / durationMs);
+        setStrokeProgress(easeInOut(rawT));
+
+        if (rawT < 1) {
+          rafId = requestAnimationFrame(tick);
+        } else {
+          pauseTimeout = setTimeout(() => {
+            setActiveStroke((prev) => {
+              if (prev >= totalStrokes) {
+                setIsPlaying(false);
+                return totalStrokes;
+              }
+              return prev + 1;
+            });
+          }, Math.round(160 / speed));
+        }
+      };
+
+      rafId = requestAnimationFrame(tick);
+    }
+
+    return () => {
+      if (rafId) cancelAnimationFrame(rafId);
+      if (pauseTimeout) clearTimeout(pauseTimeout);
+    };
+  }, [isPlaying, activeStroke, speed, totalStrokes]);
+
+  // Smooth single-stroke preview when stepping manually
+  const triggerSingleStrokeDraw = () => {
+    animTriggerRef.current += 1;
+    const myRun = animTriggerRef.current;
+    const durationMs = 420;
+    const startTime = performance.now();
+    setStrokeProgress(0);
+
+    const stepTick = (now: number) => {
+      if (animTriggerRef.current !== myRun) return;
+      const t = Math.min(1, (now - startTime) / durationMs);
+      const eased = t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2;
+      setStrokeProgress(eased);
+      if (t < 1) requestAnimationFrame(stepTick);
+    };
+    requestAnimationFrame(stepTick);
+  };
 
   if (!activeSet || !activeSet.is_published) {
     return (
@@ -169,7 +252,7 @@ export default function ShodouLombaPage() {
       total_questions: 5,
       correct_answers: checkedCount,
       time_spent_seconds: 480,
-      set_title: `Shodou 『${currentModel.name}』 (${selectedStyle})`,
+      set_title: `Shodou 『${currentModel.name}』 (#${currentKanjiNumber})`,
       type: 'practice_opened',
     });
 
@@ -190,38 +273,30 @@ export default function ShodouLombaPage() {
 
   return (
     <div className="space-y-3 pb-4 max-w-[1400px] mx-auto">
-      {/* 1. SUB-HEADER & SELECTOR METADATA BAR (PERSIS MOCKUP) */}
-      <section className="bg-white rounded-2xl border border-[#EDE8E1] px-4 py-2.5 sm:px-5 sm:py-3 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-3">
-        {/* Sisi Kiri: Breadcrumb Navigasi */}
-        <div className="flex items-center gap-2 text-xs sm:text-[13px] font-medium text-[#4B5563]">
+      {/* 1. SUB-HEADER & SELECTOR METADATA BAR (LIGHT FROSTED GLASS) */}
+      <section className="panel-frost-glass text-sumi rounded-2xl px-4 py-3 sm:px-5 sm:py-3.5 flex flex-col md:flex-row md:items-center justify-between gap-3">
+        {/* Sisi Kiri: Tombol Kembali & Nama Cabang */}
+        <div className="flex items-center gap-2.5 text-xs sm:text-[13px] font-semibold">
           <Link
             href="/siswa"
-            className="flex items-center gap-1.5 hover:text-crimson transition-colors"
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white/75 hover:bg-white border border-sumi-border text-sumi font-bold transition-colors shadow-2xs"
           >
-            <Home className="w-3.5 h-3.5 text-[#6B7280]" />
-            <span>Beranda</span>
+            <ArrowLeft className="w-3.5 h-3.5 text-crimson" />
+            <span>Kembali</span>
           </Link>
-          <ChevronRight className="w-3.5 h-3.5 text-[#9CA3AF]" />
-          <Link
-            href="/siswa#katalog-lomba"
-            className="hover:text-crimson transition-colors"
-          >
-            Ruang Lomba
-          </Link>
-          <ChevronRight className="w-3.5 h-3.5 text-[#9CA3AF]" />
-          <span className="font-bold text-crimson font-jp">
+          <span className="font-extrabold text-crimson font-jp">
             Shodou (書道)
           </span>
         </div>
 
-        {/* Sisi Kanan: Dropdown Selector Karakter & Gaya Tulisan */}
+        {/* Sisi Kanan: Dropdown Selector Karakter & Input Nomor Urut */}
         <div className="flex items-center flex-wrap gap-2.5">
           {/* Selector Karakter */}
           <div className="relative inline-flex items-center">
             <label htmlFor="select-kanji-model" className="sr-only">
               Pilih Model Karakter
             </label>
-            <span className="text-xs font-semibold text-[#4B5563] mr-1.5 hidden sm:inline">
+            <span className="text-xs font-bold text-sumi-charcoal mr-1.5 hidden sm:inline">
               Model Karakter:
             </span>
             <div className="relative">
@@ -229,38 +304,60 @@ export default function ShodouLombaPage() {
                 id="select-kanji-model"
                 value={selectedModelKey}
                 onChange={(e) => setSelectedModelKey(e.target.value)}
-                className="appearance-none bg-[#FAF7F2] hover:bg-[#F5EFE6] border border-[#E5DEC9] text-[#111827] text-xs sm:text-[13px] font-bold py-1.5 pl-3 pr-8 rounded-xl focus:outline-none focus:ring-2 focus:ring-crimson/30 transition-all cursor-pointer shadow-sm font-jp"
+                className="appearance-none bg-white/75 hover:bg-white/95 border border-white/80 text-sumi text-xs sm:text-[13px] font-bold py-1.5 pl-3 pr-8 rounded-xl focus:outline-none focus:ring-2 focus:ring-crimson/40 transition-all cursor-pointer shadow-xs font-jp"
               >
-                {Object.entries(KANJI_MODELS).map(([key, model]) => (
+                {kanjiEntries.map(([key, model], idx) => (
                   <option key={key} value={key}>
-                    『{model.name}』 ({model.meaning})
+                    #{idx + 1} 『{model.name}』 ({model.meaning})
                   </option>
                 ))}
               </select>
-              <ChevronDown className="w-3.5 h-3.5 text-[#6B7280] absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+              <ChevronDown className="w-3.5 h-3.5 text-sumi-charcoal absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
             </div>
           </div>
 
-          {/* Selector Gaya Tulisan */}
-          <div className="relative inline-flex items-center">
-            <label htmlFor="select-kanji-style" className="sr-only">
-              Pilih Gaya Kaligrafi
+          {/* Input Nomor Urut Kanji (No: 1 - 83) */}
+          <div className="inline-flex items-center gap-1.5">
+            <label htmlFor="input-kanji-number" className="text-xs font-bold text-sumi-charcoal">
+              No:
             </label>
-            <span className="text-xs font-semibold text-[#4B5563] mr-1.5 hidden sm:inline">
-              Gaya:
-            </span>
-            <div className="relative">
-              <select
-                id="select-kanji-style"
-                value={selectedStyle}
-                onChange={(e) => setSelectedStyle(e.target.value)}
-                className="appearance-none bg-[#FAF7F2] hover:bg-[#F5EFE6] border border-[#E5DEC9] text-[#111827] text-xs sm:text-[13px] font-bold py-1.5 pl-3 pr-8 rounded-xl focus:outline-none focus:ring-2 focus:ring-crimson/30 transition-all cursor-pointer shadow-sm font-jp"
+            <div className="inline-flex items-center bg-white/75 border border-white/80 rounded-xl p-0.5 shadow-xs">
+              <button
+                type="button"
+                onClick={() => {
+                  const prev = currentKanjiNumber > 1 ? currentKanjiNumber - 1 : kanjiEntries.length;
+                  handleJumpToNumber(String(prev));
+                }}
+                className="w-6 h-6 rounded-lg hover:bg-white text-sumi font-bold text-xs flex items-center justify-center transition-colors"
+                title="Kanji Sebelumnya"
               >
-                <option value="Kaisho (楷書) - Baku">[ Kaisho ] Baku</option>
-                <option value="Gyousho (行書) - Semi-kursif">[ Gyousho ] Semi-kursif</option>
-                <option value="Sousho (草書) - Kursif">[ Sousho ] Kursif</option>
-              </select>
-              <ChevronDown className="w-3.5 h-3.5 text-[#6B7280] absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+                -
+              </button>
+              <input
+                id="input-kanji-number"
+                type="number"
+                min={1}
+                max={kanjiEntries.length}
+                value={numberInput}
+                onChange={(e) => handleJumpToNumber(e.target.value)}
+                onBlur={() => setNumberInput(String(currentKanjiNumber))}
+                className="w-11 bg-transparent text-center text-xs sm:text-[13px] font-black text-crimson focus:outline-none tabular-nums [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                title={`Masukkan nomor kanji 1 sampai ${kanjiEntries.length}`}
+              />
+              <span className="text-[11px] font-semibold text-sumi-muted pr-1">
+                /{kanjiEntries.length}
+              </span>
+              <button
+                type="button"
+                onClick={() => {
+                  const next = currentKanjiNumber < kanjiEntries.length ? currentKanjiNumber + 1 : 1;
+                  handleJumpToNumber(String(next));
+                }}
+                className="w-6 h-6 rounded-lg hover:bg-white text-sumi font-bold text-xs flex items-center justify-center transition-colors"
+                title="Kanji Berikutnya"
+              >
+                +
+              </button>
             </div>
           </div>
         </div>
@@ -271,23 +368,23 @@ export default function ShodouLombaPage() {
         {/* ======================================================== */}
         {/* SISI KIRI: CANVAS MODEL & ANIMASI GORESAN (7 KOLOM)      */}
         {/* ======================================================== */}
-        <section className="lg:col-span-7 bg-white rounded-2xl border border-[#EDE8E1] p-3.5 sm:p-4 shadow-sm flex flex-col justify-between space-y-3">
-          {/* Card Header: Judul & Segmented Pill Toggle Grid */}
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-2 border-b border-[#F0EBE1] gap-2">
-            <h2 className="font-extrabold uppercase text-xs sm:text-[13px] tracking-wider text-sumi flex items-center gap-2">
-              <Layers className="w-4 h-4 text-crimson" />
-              <span>CANVAS MODEL & ANIMASI GORESAN</span>
+        <section className="lg:col-span-7 panel-washi-pagoda rounded-3xl border border-[#DFCBB8] p-4 sm:p-5 flex flex-col justify-between space-y-3.5">
+          {/* Clean Editorial Header (No dark strip) */}
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-2.5 border-b border-[#D8C1AE]/70 gap-2">
+            <h2 className="font-extrabold uppercase text-xs sm:text-[13px] tracking-[0.12em] text-[#6B2D26] flex items-center gap-2">
+              <Layers className="w-4 h-4 text-[#B91C1C]" />
+              <span>CANVAS MODEL &amp; ANIMASI GORESAN</span>
             </h2>
 
             {/* Toggle Grid Pill Buttons */}
-            <div className="flex items-center bg-[#FAF5EE] p-1 rounded-xl border border-[#EDE8E1] text-[11px] sm:text-xs font-bold gap-1 self-start sm:self-auto">
+            <div className="flex items-center bg-white/75 backdrop-blur-xs p-1 rounded-xl border border-[#DEC9B6] text-[11px] sm:text-xs font-bold gap-1 self-start sm:self-auto">
               <button
                 type="button"
                 onClick={() => setGridType('polos')}
                 className={`px-2.5 py-0.5 rounded-lg transition-all ${
                   gridType === 'polos'
-                    ? 'bg-crimson text-white shadow-sm'
-                    : 'text-[#4B5563] hover:text-sumi hover:bg-[#F0EBE1]'
+                    ? 'bg-[#B91C1C] text-white shadow-sm'
+                    : 'text-[#4A3B32] hover:text-[#1A1412] hover:bg-white/80'
                 }`}
               >
                 Polos
@@ -297,8 +394,8 @@ export default function ShodouLombaPage() {
                 onClick={() => setGridType('grid-4')}
                 className={`px-2.5 py-0.5 rounded-lg transition-all font-jp ${
                   gridType === 'grid-4'
-                    ? 'bg-crimson text-white shadow-sm'
-                    : 'text-[#4B5563] hover:text-sumi hover:bg-[#F0EBE1]'
+                    ? 'bg-[#B91C1C] text-white shadow-sm'
+                    : 'text-[#4A3B32] hover:text-[#1A1412] hover:bg-white/80'
                 }`}
               >
                 Grid 4 Kotak (十字)
@@ -308,8 +405,8 @@ export default function ShodouLombaPage() {
                 onClick={() => setGridType('grid-9')}
                 className={`px-2.5 py-0.5 rounded-lg transition-all font-jp ${
                   gridType === 'grid-9'
-                    ? 'bg-crimson text-white shadow-sm'
-                    : 'text-[#4B5563] hover:text-sumi hover:bg-[#F0EBE1]'
+                    ? 'bg-[#B91C1C] text-white shadow-sm'
+                    : 'text-[#4A3B32] hover:text-[#1A1412] hover:bg-white/80'
                 }`}
               >
                 Grid 9 Kotak (九宮格)
@@ -317,15 +414,11 @@ export default function ShodouLombaPage() {
             </div>
           </div>
 
-          {/* Kertas Hanshi Digital Utama */}
-          <div className="w-full bg-[#FAF7F2] rounded-2xl border border-[#E8DFC9] p-2 sm:p-3 flex items-center justify-center relative shadow-inner overflow-hidden">
+          <div className="space-y-3.5 flex-1 flex flex-col justify-between">
+          {/* Clean Translucent Stage for Hanshi Paper */}
+          <div className="w-full rounded-2xl p-2 sm:p-3 flex items-center justify-center relative overflow-hidden">
             {/* Hanshi Paper Frame Box */}
-            <div className="relative w-full max-w-[300px] sm:max-w-[330px] aspect-[1/1] bg-[#FAF7F2] border-2 border-[#8B2332]/70 rounded-2xl shadow-[0_4px_16px_rgba(0,0,0,0.06)] flex items-center justify-center p-2.5 select-none">
-              {/* Faint Tehon Guide Watermark (Subtle Calligraphy Grid Guide) */}
-              <div className="absolute inset-0 flex items-center justify-center text-[150px] sm:text-[170px] font-black text-[#111827]/[0.035] select-none pointer-events-none font-jp leading-none tracking-tighter">
-                {currentModel.name}
-              </div>
-
+            <div className="relative w-full max-w-[300px] sm:max-w-[330px] aspect-[1/1] bg-[#FFFDF8] border-2 border-[#8B2332]/85 rounded-2xl shadow-[0_8px_24px_rgba(70,35,25,0.14)] flex items-center justify-center p-2.5 select-none">
               {/* Dynamic SVG Kanji Strokes & Grid Overlay */}
               <svg
                 viewBox="0 0 109 109"
@@ -407,7 +500,7 @@ export default function ShodouLombaPage() {
                   </g>
                 )}
 
-                {/* 2. Future Guideline Strokes (Water-brush faint guide for upcoming strokes) */}
+                {/* 2. Future Guideline Strokes (Clear tehon brush guide for upcoming strokes) */}
                 {currentModel.strokes.map((s, idx) => {
                   const strokeNum = idx + 1;
                   if (strokeNum > activeStroke) {
@@ -415,12 +508,11 @@ export default function ShodouLombaPage() {
                       <path
                         key={`future-${idx}`}
                         d={s.d}
-                        stroke="#94A3B8"
-                        strokeWidth="5"
-                        strokeDasharray="2 3"
+                        stroke="#64748B"
+                        strokeWidth="6.2"
                         strokeLinecap="round"
                         strokeLinejoin="round"
-                        opacity="0.38"
+                        opacity="0.55"
                       />
                     );
                   }
@@ -452,44 +544,52 @@ export default function ShodouLombaPage() {
                     const start = getStartPoint(s.d);
                     const isRightEdge = start.x > 82;
                     const isBottomEdge = start.y > 82;
+                    const dashOffset = 1 - strokeProgress;
 
                     return (
                       <g key={`active-${idx}`}>
                         {/* Wide Crimson Aura / Glow */}
                         <path
                           d={s.d}
-                          stroke="rgba(185, 28, 28, 0.35)"
-                          strokeWidth="13"
+                          pathLength={1}
+                          strokeDasharray={1}
+                          strokeDashoffset={dashOffset}
+                          stroke="rgba(185, 28, 28, 0.25)"
+                          strokeWidth="12"
                           strokeLinecap="round"
                           strokeLinejoin="round"
                         />
-                        {/* Core Active Crimson Stroke Line */}
+                        {/* Core Active Crimson Stroke Line (Smoothly Animated) */}
                         <path
+                          ref={activePathRef}
                           d={s.d}
+                          pathLength={1}
+                          strokeDasharray={1}
+                          strokeDashoffset={dashOffset}
                           stroke="#B91C1C"
                           strokeWidth="6.5"
                           strokeLinecap="round"
                           strokeLinejoin="round"
                         />
-                        {/* Start point radar pulse */}
-                        <circle
-                          cx={start.x}
-                          cy={start.y}
-                          r="6"
-                          fill="none"
-                          stroke="#B91C1C"
-                          strokeWidth="1"
-                          opacity="0.75"
-                          className="animate-ping"
-                        />
+                        {/* Gliding Brush Tip Indicator while drawing */}
+                        {brushTipPos && strokeProgress > 0 && strokeProgress < 1 && (
+                          <circle
+                            cx={brushTipPos.x}
+                            cy={brushTipPos.y}
+                            r="4.2"
+                            fill="#991B1B"
+                            stroke="#FFFFFF"
+                            strokeWidth="1.2"
+                          />
+                        )}
                         {/* Start point marker (Tome origin indicator) */}
                         <circle
                           cx={start.x}
                           cy={start.y}
-                          r="3.5"
+                          r="3.2"
                           fill="#B91C1C"
                           stroke="#FFFFFF"
-                          strokeWidth="1.2"
+                          strokeWidth="1.1"
                         />
                         {/* Stroke number badge at stroke start */}
                         <g transform={`translate(${isRightEdge ? start.x - 14 : start.x + 3}, ${isBottomEdge ? start.y - 12 : start.y - 4})`}>
@@ -534,10 +634,38 @@ export default function ShodouLombaPage() {
             </div>
           </div>
 
-          {/* Player & Speed Controller (Bawah Kertas - Centered as in Mockup) */}
+          {/* Tutorial Step Guide: ultra-compact 1-line on mobile, full card on desktop */}
+          {currentModel.steps[activeStroke - 1] && (
+            <>
+              <div className="flex sm:hidden items-center justify-center gap-2 text-xs text-sumi px-2">
+                <span className="px-2 py-0.5 rounded-md bg-crimson text-white text-[10px] font-extrabold whitespace-nowrap">
+                  {activeStroke}/{totalStrokes}
+                </span>
+                <span className="font-bold truncate">
+                  {currentModel.steps[activeStroke - 1].title}
+                </span>
+              </div>
+
+              <div className="hidden sm:flex rounded-2xl bg-[#FAF7F2]/90 border border-[#EDE8E1] px-4 py-2.5 items-start gap-3">
+                <span className="px-2.5 py-0.5 rounded-full bg-crimson text-white text-[11px] font-bold whitespace-nowrap mt-0.5">
+                  Goresan {activeStroke}/{totalStrokes}
+                </span>
+                <div className="min-w-0 text-left">
+                  <div className="text-xs font-bold text-sumi">
+                    {currentModel.steps[activeStroke - 1].title}
+                  </div>
+                  <p className="text-[11px] text-sumi-charcoal leading-relaxed mt-0.5">
+                    {currentModel.steps[activeStroke - 1].desc}
+                  </p>
+                </div>
+              </div>
+            </>
+          )}
+
+          {/* Player & Speed Controller */}
           <div className="space-y-2.5 pt-1 text-center">
             {/* Row 1: Player Buttons & Step Controls */}
-            <div className="flex items-center justify-center gap-1.5">
+            <div className="flex items-center justify-center gap-2">
               <button
                 type="button"
                 onClick={() => {
@@ -550,7 +678,7 @@ export default function ShodouLombaPage() {
                     setIsPlaying(true);
                   }
                 }}
-                className={`h-8 px-3 rounded-xl font-bold text-xs flex items-center gap-1.5 transition-all shadow-sm ${
+                className={`h-8 px-4 rounded-full font-bold text-xs flex items-center gap-1.5 transition-all shadow-sm ${
                   isPlaying
                     ? 'bg-[#111827] text-white hover:bg-black'
                     : 'bg-crimson hover:bg-[#991B1B] text-white'
@@ -574,9 +702,10 @@ export default function ShodouLombaPage() {
                 onClick={() => {
                   setIsPlaying(false);
                   setActiveStroke((prev) => Math.max(1, prev - 1));
+                  triggerSingleStrokeDraw();
                 }}
                 disabled={activeStroke <= 1}
-                className="h-8 px-2.5 rounded-xl border border-[#EDE8E1] bg-[#FAF5EE] hover:bg-[#F0EBE1] text-[#374151] font-bold text-xs flex items-center gap-1 disabled:opacity-40 disabled:cursor-not-allowed transition-all"
+                className="h-8 px-3 rounded-full border border-[#EDE8E1] bg-[#FAF5EE] hover:bg-[#F0EBE1] text-[#374151] font-bold text-xs flex items-center gap-1 disabled:opacity-40 disabled:cursor-not-allowed transition-all"
                 title="Goresan Sebelumnya"
               >
                 <SkipBack className="w-3 h-3" />
@@ -588,9 +717,10 @@ export default function ShodouLombaPage() {
                 onClick={() => {
                   setIsPlaying(false);
                   setActiveStroke((prev) => Math.min(totalStrokes, prev + 1));
+                  triggerSingleStrokeDraw();
                 }}
                 disabled={activeStroke >= totalStrokes}
-                className="h-8 px-2.5 rounded-xl border border-[#EDE8E1] bg-[#FAF5EE] hover:bg-[#F0EBE1] text-[#374151] font-bold text-xs flex items-center gap-1 disabled:opacity-40 disabled:cursor-not-allowed transition-all"
+                className="h-8 px-3 rounded-full border border-[#EDE8E1] bg-[#FAF5EE] hover:bg-[#F0EBE1] text-[#374151] font-bold text-xs flex items-center gap-1 disabled:opacity-40 disabled:cursor-not-allowed transition-all"
                 title="Goresan Selanjutnya"
               >
                 <span>Maju</span>
@@ -602,8 +732,9 @@ export default function ShodouLombaPage() {
                 onClick={() => {
                   setIsPlaying(false);
                   setActiveStroke(1);
+                  triggerSingleStrokeDraw();
                 }}
-                className="h-8 w-8 rounded-xl border border-[#EDE8E1] bg-[#FAF5EE] hover:bg-[#F0EBE1] text-[#6B7280] hover:text-sumi flex items-center justify-center transition-all"
+                className="h-8 w-8 rounded-full border border-[#EDE8E1] bg-[#FAF5EE] hover:bg-[#F0EBE1] text-[#6B7280] hover:text-sumi flex items-center justify-center transition-all"
                 title="Reset ke Goresan 1"
               >
                 <RotateCcw className="w-3 h-3" />
@@ -629,41 +760,18 @@ export default function ShodouLombaPage() {
                 ))}
               </div>
             </div>
-
-            {/* Row 3: Status Tracker GoresanAktif: [== 4 / 12 ==] */}
-            <div className="max-w-sm mx-auto bg-[#FAF5EE] rounded-xl p-2.5 border border-[#EDE8E1] space-y-1.5">
-              <div className="flex items-center justify-between text-xs font-bold text-sumi">
-                <span className="font-mono text-crimson">
-                  Goresan Aktif: [ {activeStroke} / {totalStrokes} ]
-                </span>
-                <span className="text-[#4B5563] font-medium text-[11px] truncate max-w-[200px]">
-                  {currentModel.steps[activeStroke - 1]?.title || 'Goresan Selesai'}
-                </span>
-              </div>
-
-              {/* Mini Crimson Progress Bar */}
-              <div className="h-1.5 w-full bg-[#F5E6E6] rounded-full overflow-hidden">
-                <div
-                  className="h-full bg-crimson rounded-full transition-all duration-300"
-                  style={{ width: `${(activeStroke / totalStrokes) * 100}%` }}
-                />
-              </div>
-
-              <p className="text-[11px] text-[#4B5563] italic leading-tight">
-                💡 {currentModel.steps[activeStroke - 1]?.desc}
-              </p>
-            </div>
+          </div>
           </div>
         </section>
 
         {/* ======================================================== */}
-        {/* SISI KANAN: ACTION PANEL (EVALUASI & DOKUMENTASI) (5 KOLOM) */}
+        {/* SISI KANAN: ACTION PANEL (LIGHT FROSTED GLASS) (5 KOLOM) */}
         {/* ======================================================== */}
-        <section className="lg:col-span-5 bg-white rounded-2xl border border-[#EDE8E1] p-3.5 sm:p-4 shadow-sm flex flex-col justify-between space-y-3.5">
-          {/* Action Panel Header & Segmented Tabs */}
-          <div className="space-y-2.5">
-            <div className="flex items-center justify-between pb-2 border-b border-[#F0EBE1]">
-              <h2 className="font-extrabold uppercase text-xs sm:text-[13px] tracking-wider text-sumi flex items-center gap-2">
+        <section className="lg:col-span-5 panel-frost-glass text-sumi rounded-3xl p-4 sm:p-5 flex flex-col justify-between space-y-4">
+          {/* Header & Status */}
+          <div className="space-y-3">
+            <div className="flex items-center justify-between pb-2.5 border-b border-sumi/10">
+              <h2 className="font-extrabold uppercase text-xs sm:text-[13px] tracking-[0.14em] text-sumi flex items-center gap-2">
                 <Award className="w-4 h-4 text-crimson" />
                 <span>ACTION PANEL</span>
               </h2>
@@ -673,25 +781,25 @@ export default function ShodouLombaPage() {
                 <select
                   value={statusSession}
                   onChange={(e) => setStatusSession(e.target.value)}
-                  className="appearance-none bg-[#FAF5EE] border border-[#E5DEC9] text-[#111827] text-[11px] font-bold py-1 pl-2.5 pr-7 rounded-xl focus:outline-none focus:ring-1 focus:ring-crimson cursor-pointer"
+                  className="appearance-none bg-white/75 hover:bg-white/95 border border-white/80 text-sumi text-[11px] font-bold py-1 pl-2.5 pr-7 rounded-xl focus:outline-none focus:ring-1 focus:ring-crimson cursor-pointer shadow-2xs"
                 >
-                  <option value="Sedang Berlatih [⏳]">Sedang Berlatih [⏳]</option>
-                  <option value="Akan Selesai [✓]">Akan Selesai [✓]</option>
-                  <option value="Siap Review Sensei [⭐]">Siap Review Sensei [⭐]</option>
+                  <option value="Sedang Berlatih">Sedang Berlatih</option>
+                  <option value="Akan Selesai">Akan Selesai</option>
+                  <option value="Siap Review Sensei">Siap Review Sensei</option>
                 </select>
-                <ChevronDown className="w-3 h-3 text-[#6B7280] absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none" />
+                <ChevronDown className="w-3 h-3 text-sumi-charcoal absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none" />
               </div>
             </div>
 
             {/* Segmented Navigation Tabs */}
-            <div className="grid grid-cols-2 gap-2 p-1 bg-[#FAF5EE] rounded-xl border border-[#EDE8E1]">
+            <div className="grid grid-cols-2 gap-1.5 p-1 bg-white/50 rounded-xl border border-white/70">
               <button
                 type="button"
                 onClick={() => setActiveTab('rubrik')}
                 className={`py-1.5 text-xs font-extrabold tracking-wide rounded-lg transition-all ${
                   activeTab === 'rubrik'
-                    ? 'bg-white text-crimson shadow-sm border border-[#E5DEC9]'
-                    : 'text-[#6B7280] hover:text-sumi'
+                    ? 'bg-crimson text-white shadow-sm'
+                    : 'text-sumi-charcoal hover:text-sumi'
                 }`}
               >
                 RUBRIK EVALUASI MANDIRI
@@ -701,8 +809,8 @@ export default function ShodouLombaPage() {
                 onClick={() => setActiveTab('unggah')}
                 className={`py-1.5 text-xs font-extrabold tracking-wide rounded-lg transition-all ${
                   activeTab === 'unggah'
-                    ? 'bg-white text-crimson shadow-sm border border-[#E5DEC9]'
-                    : 'text-[#6B7280] hover:text-sumi'
+                    ? 'bg-crimson text-white shadow-sm'
+                    : 'text-sumi-charcoal hover:text-sumi'
                 }`}
               >
                 UNGGAH KARYA
@@ -710,10 +818,11 @@ export default function ShodouLombaPage() {
             </div>
           </div>
 
+          <div className="space-y-3.5 flex-1 flex flex-col justify-between">
           {/* TAB 1: RUBRIK EVALUASI MANDIRI */}
           {activeTab === 'rubrik' && (
             <div className="space-y-2.5">
-              <div className="text-[11px] font-semibold text-[#6B7280] uppercase tracking-wider">
+              <div className="text-[11px] font-bold text-sumi-charcoal uppercase tracking-wider">
                 Checklist Standar Penilaian Sensei:
               </div>
 
@@ -723,8 +832,8 @@ export default function ShodouLombaPage() {
                 <div
                   className={`p-2.5 rounded-xl border transition-all flex items-center justify-between ${
                     checklist.tome
-                      ? 'bg-[#FEF2F2] border-crimson/50'
-                      : 'bg-[#FAF5EE] border-[#EDE8E1] hover:border-crimson/30'
+                      ? 'bg-[#FEF2F2]/85 border-crimson/50'
+                      : 'bg-white/60 border-white/80 hover:border-crimson/35'
                   }`}
                 >
                   <div className="flex items-center gap-2">
@@ -734,7 +843,7 @@ export default function ShodouLombaPage() {
                     <button
                       type="button"
                       onClick={() => setActiveTooltip(activeTooltip === 'tome' ? null : 'tome')}
-                      className="w-5 h-5 rounded-md bg-crimson text-white text-[11px] font-bold flex items-center justify-center hover:bg-[#991B1B] transition-colors"
+                      className="w-5 h-5 rounded-md bg-crimson/15 hover:bg-crimson text-crimson hover:text-white text-[11px] font-bold flex items-center justify-center transition-colors"
                       title="Lihat kriteria teknik Tome"
                     >
                       ?
@@ -747,7 +856,7 @@ export default function ShodouLombaPage() {
                     className={`w-6 h-6 rounded-md flex items-center justify-center transition-all ${
                       checklist.tome
                         ? 'bg-crimson text-white shadow-sm'
-                        : 'border-2 border-[#D1D5DB] bg-white hover:border-crimson'
+                        : 'border-2 border-sumi/25 bg-white/80 hover:border-crimson'
                     }`}
                   >
                     {checklist.tome && <Check className="w-4 h-4 stroke-[3]" />}
@@ -756,10 +865,10 @@ export default function ShodouLombaPage() {
 
                 {/* Popover Tooltip Tome */}
                 {activeTooltip === 'tome' && (
-                  <div className="p-2.5 bg-white rounded-xl border border-crimson/40 shadow-md text-xs space-y-1">
+                  <div className="p-2.5 bg-white/85 rounded-xl border border-crimson/35 text-xs space-y-1 shadow-sm">
                     <div className="font-bold text-crimson">{criteriaData.tome.title}</div>
-                    <p className="text-[#374151] leading-relaxed text-[11px]">{criteriaData.tome.desc}</p>
-                    <div className="text-[10px] text-[#6B7280] italic">{criteriaData.tome.senseiTip}</div>
+                    <p className="text-sumi-charcoal leading-relaxed text-[11px]">{criteriaData.tome.desc}</p>
+                    <div className="text-[10px] text-sumi-muted italic">{criteriaData.tome.senseiTip}</div>
                   </div>
                 )}
 
@@ -767,8 +876,8 @@ export default function ShodouLombaPage() {
                 <div
                   className={`p-2.5 rounded-xl border transition-all flex items-center justify-between ${
                     checklist.hane
-                      ? 'bg-[#FEF2F2] border-crimson/50'
-                      : 'bg-[#FAF5EE] border-[#EDE8E1] hover:border-crimson/30'
+                      ? 'bg-[#FEF2F2]/85 border-crimson/50'
+                      : 'bg-white/60 border-white/80 hover:border-crimson/35'
                   }`}
                 >
                   <div className="flex items-center gap-2">
@@ -778,7 +887,7 @@ export default function ShodouLombaPage() {
                     <button
                       type="button"
                       onClick={() => setActiveTooltip(activeTooltip === 'hane' ? null : 'hane')}
-                      className="w-5 h-5 rounded-md bg-crimson text-white text-[11px] font-bold flex items-center justify-center hover:bg-[#991B1B] transition-colors"
+                      className="w-5 h-5 rounded-md bg-crimson/15 hover:bg-crimson text-crimson hover:text-white text-[11px] font-bold flex items-center justify-center transition-colors"
                       title="Lihat kriteria teknik Hane"
                     >
                       ?
@@ -791,7 +900,7 @@ export default function ShodouLombaPage() {
                     className={`w-6 h-6 rounded-md flex items-center justify-center transition-all ${
                       checklist.hane
                         ? 'bg-crimson text-white shadow-sm'
-                        : 'border-2 border-[#D1D5DB] bg-white hover:border-crimson'
+                        : 'border-2 border-sumi/25 bg-white/80 hover:border-crimson'
                     }`}
                   >
                     {checklist.hane && <Check className="w-4 h-4 stroke-[3]" />}
@@ -800,10 +909,10 @@ export default function ShodouLombaPage() {
 
                 {/* Popover Tooltip Hane */}
                 {activeTooltip === 'hane' && (
-                  <div className="p-2.5 bg-white rounded-xl border border-crimson/40 shadow-md text-xs space-y-1">
+                  <div className="p-2.5 bg-white/85 rounded-xl border border-crimson/35 text-xs space-y-1 shadow-sm">
                     <div className="font-bold text-crimson">{criteriaData.hane.title}</div>
-                    <p className="text-[#374151] leading-relaxed text-[11px]">{criteriaData.hane.desc}</p>
-                    <div className="text-[10px] text-[#6B7280] italic">{criteriaData.hane.senseiTip}</div>
+                    <p className="text-sumi-charcoal leading-relaxed text-[11px]">{criteriaData.hane.desc}</p>
+                    <div className="text-[10px] text-sumi-muted italic">{criteriaData.hane.senseiTip}</div>
                   </div>
                 )}
 
@@ -811,8 +920,8 @@ export default function ShodouLombaPage() {
                 <div
                   className={`p-2.5 rounded-xl border transition-all flex items-center justify-between ${
                     checklist.harai
-                      ? 'bg-[#FEF2F2] border-crimson/50'
-                      : 'bg-[#FAF5EE] border-[#EDE8E1] hover:border-crimson/30'
+                      ? 'bg-[#FEF2F2]/85 border-crimson/50'
+                      : 'bg-white/60 border-white/80 hover:border-crimson/35'
                   }`}
                 >
                   <div className="flex items-center gap-2">
@@ -822,7 +931,7 @@ export default function ShodouLombaPage() {
                     <button
                       type="button"
                       onClick={() => setActiveTooltip(activeTooltip === 'harai' ? null : 'harai')}
-                      className="w-5 h-5 rounded-md bg-[#6B7280] hover:bg-crimson text-white text-[11px] font-bold flex items-center justify-center transition-colors"
+                      className="w-5 h-5 rounded-md bg-crimson/15 hover:bg-crimson text-crimson hover:text-white text-[11px] font-bold flex items-center justify-center transition-colors"
                       title="Lihat kriteria teknik Harai"
                     >
                       ?
@@ -835,7 +944,7 @@ export default function ShodouLombaPage() {
                     className={`w-6 h-6 rounded-md flex items-center justify-center transition-all ${
                       checklist.harai
                         ? 'bg-crimson text-white shadow-sm'
-                        : 'border-2 border-[#D1D5DB] bg-white hover:border-crimson'
+                        : 'border-2 border-sumi/25 bg-white/80 hover:border-crimson'
                     }`}
                   >
                     {checklist.harai && <Check className="w-4 h-4 stroke-[3]" />}
@@ -844,10 +953,10 @@ export default function ShodouLombaPage() {
 
                 {/* Popover Tooltip Harai */}
                 {activeTooltip === 'harai' && (
-                  <div className="p-2.5 bg-white rounded-xl border border-crimson/40 shadow-md text-xs space-y-1">
+                  <div className="p-2.5 bg-white/85 rounded-xl border border-crimson/35 text-xs space-y-1 shadow-sm">
                     <div className="font-bold text-crimson">{criteriaData.harai.title}</div>
-                    <p className="text-[#374151] leading-relaxed text-[11px]">{criteriaData.harai.desc}</p>
-                    <div className="text-[10px] text-[#6B7280] italic">{criteriaData.harai.senseiTip}</div>
+                    <p className="text-sumi-charcoal leading-relaxed text-[11px]">{criteriaData.harai.desc}</p>
+                    <div className="text-[10px] text-sumi-muted italic">{criteriaData.harai.senseiTip}</div>
                   </div>
                 )}
 
@@ -855,8 +964,8 @@ export default function ShodouLombaPage() {
                 <div
                   className={`p-2.5 rounded-xl border transition-all flex items-center justify-between ${
                     checklist.balance
-                      ? 'bg-[#FEF2F2] border-crimson/50'
-                      : 'bg-[#FAF5EE] border-[#EDE8E1] hover:border-crimson/30'
+                      ? 'bg-[#FEF2F2]/85 border-crimson/50'
+                      : 'bg-white/60 border-white/80 hover:border-crimson/35'
                   }`}
                 >
                   <div className="flex items-center gap-2">
@@ -871,7 +980,7 @@ export default function ShodouLombaPage() {
                     className={`w-6 h-6 rounded-md flex items-center justify-center transition-all ${
                       checklist.balance
                         ? 'bg-crimson text-white shadow-sm'
-                        : 'border-2 border-[#D1D5DB] bg-white hover:border-crimson'
+                        : 'border-2 border-sumi/25 bg-white/80 hover:border-crimson'
                     }`}
                   >
                     {checklist.balance && <Check className="w-4 h-4 stroke-[3]" />}
@@ -882,13 +991,13 @@ export default function ShodouLombaPage() {
                 <div
                   className={`p-2.5 rounded-xl border transition-all flex items-center justify-between ${
                     checklist.rakkan
-                      ? 'bg-[#FEF2F2] border-crimson/50'
-                      : 'bg-[#FAF5EE] border-[#EDE8E1] hover:border-crimson/30'
+                      ? 'bg-[#FEF2F2]/85 border-crimson/50'
+                      : 'bg-white/60 border-white/80 hover:border-crimson/35'
                   }`}
                 >
                   <div className="flex items-center gap-2">
                     <span className="text-xs font-bold text-sumi font-jp">
-                      5. Rakkan & Cap (落款)
+                      5. Rakkan &amp; Cap (落款)
                     </span>
                   </div>
 
@@ -898,7 +1007,7 @@ export default function ShodouLombaPage() {
                     className={`w-6 h-6 rounded-md flex items-center justify-center transition-all ${
                       checklist.rakkan
                         ? 'bg-crimson text-white shadow-sm'
-                        : 'border-2 border-[#D1D5DB] bg-white hover:border-crimson'
+                        : 'border-2 border-sumi/25 bg-white/80 hover:border-crimson'
                     }`}
                   >
                     {checklist.rakkan && <Check className="w-4 h-4 stroke-[3]" />}
@@ -910,7 +1019,7 @@ export default function ShodouLombaPage() {
 
           {/* TAB 2: UNGGAH KARYA DETAIL */}
           {activeTab === 'unggah' && (
-            <div className="space-y-3 bg-[#FAF7F2] p-3 rounded-xl border border-[#EDE8E1]">
+            <div className="space-y-3 bg-white/60 p-3.5 rounded-xl border border-white/80">
               <div className="flex items-center justify-between">
                 <span className="text-xs font-bold text-sumi">Foto Fisik Hasil Kuas Hanshi</span>
                 {uploadedPhoto && (
@@ -920,7 +1029,7 @@ export default function ShodouLombaPage() {
                       setUploadedPhoto(null);
                       setPhotoFileName('');
                     }}
-                    className="text-xs text-red-600 hover:underline flex items-center gap-1"
+                    className="text-xs text-crimson hover:underline flex items-center gap-1"
                   >
                     <Trash2 className="w-3.5 h-3.5" />
                     <span>Hapus</span>
@@ -929,7 +1038,7 @@ export default function ShodouLombaPage() {
               </div>
 
               {uploadedPhoto ? (
-                <div className="relative w-full aspect-[4/3] rounded-xl overflow-hidden border border-[#E5DEC9] bg-white shadow-sm">
+                <div className="relative w-full aspect-[4/3] rounded-xl overflow-hidden border border-white/80 bg-white/80 shadow-sm">
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img
                     src={uploadedPhoto}
@@ -941,9 +1050,9 @@ export default function ShodouLombaPage() {
                   </div>
                 </div>
               ) : (
-                <div className="p-4 border-2 border-dashed border-[#D1D5DB] rounded-xl text-center space-y-1 bg-white/60">
-                  <Camera className="w-6 h-6 text-[#9CA3AF] mx-auto" />
-                  <p className="text-[11px] text-[#4B5563]">
+                <div className="p-4 border-2 border-dashed border-sumi/20 rounded-xl text-center space-y-1 bg-white/40">
+                  <Camera className="w-6 h-6 text-sumi-muted mx-auto" />
+                  <p className="text-[11px] text-sumi-charcoal">
                     Belum ada foto yang diambil. Gunakan tombol kamera di bawah untuk merekam karya hari ini.
                   </p>
                 </div>
@@ -952,7 +1061,7 @@ export default function ShodouLombaPage() {
           )}
 
           {/* SECTION UNGGAH KARYA & LEMBAR COUNTER (TERINTEGRASI DI BAWAH) */}
-          <div className="space-y-2.5 pt-2 border-t border-[#F0EBE1]">
+          <div className="space-y-2.5 pt-2.5 border-t border-sumi/10">
             <div className="text-xs font-bold text-sumi uppercase tracking-wider">
               Unggah Karya
             </div>
@@ -978,24 +1087,24 @@ export default function ShodouLombaPage() {
             </button>
 
             {/* Kotak Penghitung Lembar Selesai Hari Ini */}
-            <div className="bg-[#FAF5EE] rounded-xl p-2 border border-[#EDE8E1] flex items-center justify-between text-xs font-bold">
-              <span className="text-[#374151]">Jumlah Lembar Selesai Hari Ini:</span>
+            <div className="bg-white/60 rounded-xl p-2.5 border border-white/80 flex items-center justify-between text-xs font-bold">
+              <span className="text-sumi-charcoal">Jumlah Lembar Selesai Hari Ini:</span>
               <div className="flex items-center gap-1.5">
                 <button
                   type="button"
                   onClick={() => setSheetCount((prev) => Math.max(1, prev - 1))}
-                  className="w-6 h-6 rounded-lg bg-white border border-[#D1D5DB] hover:bg-[#F3ECE2] text-sumi flex items-center justify-center font-black transition-colors"
+                  className="w-6 h-6 rounded-lg bg-white/85 border border-sumi/15 hover:bg-white text-sumi flex items-center justify-center font-black transition-colors"
                   title="Kurangi Lembar"
                 >
                   <Minus className="w-3 h-3" />
                 </button>
-                <span className="px-2 py-0.5 bg-white border border-[#E5DEC9] rounded-lg text-crimson font-black text-xs min-w-[65px] text-center">
+                <span className="px-2 py-0.5 bg-white/85 border border-sumi/15 rounded-lg text-crimson font-black text-xs min-w-[65px] text-center">
                   [ {sheetCount} Lembar ]
                 </span>
                 <button
                   type="button"
                   onClick={() => setSheetCount((prev) => prev + 1)}
-                  className="w-6 h-6 rounded-lg bg-white border border-[#D1D5DB] hover:bg-[#F3ECE2] text-sumi flex items-center justify-center font-black transition-colors"
+                  className="w-6 h-6 rounded-lg bg-white/85 border border-sumi/15 hover:bg-white text-sumi flex items-center justify-center font-black transition-colors"
                   title="Tambah Lembar"
                 >
                   <Plus className="w-3 h-3" />
@@ -1013,21 +1122,17 @@ export default function ShodouLombaPage() {
               className={`w-full py-3 rounded-xl font-bold text-xs sm:text-[13px] flex items-center justify-center gap-2 transition-all shadow-md touch-target ${
                 isCompleted
                   ? 'bg-emerald-600 text-white cursor-default'
-                  : 'bg-crimson hover:bg-[#991B1B] text-white active:scale-[0.98]'
+                  : 'bg-[#991B1B] hover:bg-[#7F1D1D] text-white active:scale-[0.98]'
               }`}
             >
-              {isCompleted ? (
-                <>
-                  <CheckCircle2 className="w-4 h-4" />
-                  <span>SESI SHODOU BERHASIL TERSIMPAN</span>
-                </>
-              ) : (
-                <>
-                  <Sparkles className="w-4 h-4 fill-white" />
-                  <span>SELESAIKAN SESI LATIHAN MANDIRI</span>
-                </>
-              )}
+              <CheckCircle2 className="w-4 h-4" />
+              <span>
+                {isCompleted
+                  ? 'SESI SHODOU BERHASIL TERSIMPAN'
+                  : 'SELESAIKAN SESI LATIHAN MANDIRI'}
+              </span>
             </button>
+          </div>
           </div>
         </section>
       </div>

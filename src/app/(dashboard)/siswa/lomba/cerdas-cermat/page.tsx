@@ -3,8 +3,7 @@
 import React, { useState } from 'react';
 import Link from 'next/link';
 import { 
-  Home, 
-  ChevronRight, 
+  ArrowLeft, 
   Clock, 
   Zap, 
   Trophy, 
@@ -20,11 +19,14 @@ import {
   HelpCircle,
   Sparkles,
   BookOpen,
-  ArrowRight
+  ArrowRight,
+  Swords
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import { useAppStore } from '@/lib/data/store';
 import { QuizContainer } from '@/components/quiz/QuizContainer';
+import { EditorialLeaderboard } from '@/components/cerdas-cermat/EditorialLeaderboard';
+import { EditorialDailyTrivia } from '@/components/cerdas-cermat/EditorialDailyTrivia';
 import { 
   CC_SIMULATION_PACKAGES, 
   CC_ADDITIONAL_QUESTIONS, 
@@ -66,7 +68,7 @@ export default function CerdasCermatLombaPage() {
     title: currentPkg.title,
     description: currentPkg.description,
     difficulty_level: currentPkg.difficultyLevel,
-    duration_minutes: activeMode === 'blitz' ? 2 : currentPkg.durationMinutes,
+    duration_minutes: activeMode === 'blitz' ? 5 : currentPkg.durationMinutes,
     is_published: true,
     created_by: 'user-sensei',
     created_at: new Date().toISOString(),
@@ -76,12 +78,12 @@ export default function CerdasCermatLombaPage() {
     ...defaultSet,
     id: currentPkg.id,
     title: currentPkg.title,
-    duration_minutes: activeMode === 'blitz' ? 2 : currentPkg.durationMinutes,
+    duration_minutes: activeMode === 'blitz' ? 5 : currentPkg.durationMinutes,
   };
 
-  const setQuestions: Question[] = (activePackageId === 'set-cc-1' || !CC_ADDITIONAL_QUESTIONS[activePackageId])
-    ? questions.filter((q) => q.set_id === 'set-cc-1')
-    : CC_ADDITIONAL_QUESTIONS[activePackageId];
+  const setQuestions: Question[] = CC_ADDITIONAL_QUESTIONS[activePackageId]
+    ? CC_ADDITIONAL_QUESTIONS[activePackageId]
+    : questions.filter((q) => q.set_id === activePackageId);
 
   // Handle Trivia submission
   const handleAnswerTrivia = () => {
@@ -112,7 +114,7 @@ export default function CerdasCermatLombaPage() {
       <div className="space-y-4">
         <button
           onClick={() => setIsTakingQuiz(false)}
-          className="text-xs font-bold text-sumi-charcoal hover:text-crimson flex items-center gap-1 transition-colors px-2 py-1 rounded-lg hover:bg-white"
+          className="text-xs font-extrabold text-sumi hover:text-crimson inline-flex items-center gap-1 transition-colors px-3 py-1.5 rounded-full bg-white/75 backdrop-blur-sm border border-white/80 shadow-2xs"
         >
           <span>← Batalkan & Kembali ke Arena Cerdas Cermat</span>
         </button>
@@ -122,197 +124,150 @@ export default function CerdasCermatLombaPage() {
   }
 
   return (
-    <div className="space-y-4 pb-12 text-sumi">
-      {/* ========================================================================= */}
-      {/* 1. SUB-HEADER & MODE SWITCHER (COMPACT TOP STRIP)                          */}
-      {/* ========================================================================= */}
-      <div className="bg-white rounded-2xl border border-sumi-border shadow-sm p-4 sm:p-5 space-y-3.5">
-        {/* Baris 1: Breadcrumb di Kiri & Target KKM di Kanan */}
-        <div className="flex items-center justify-between gap-3 text-xs border-b border-sumi-border pb-3 flex-wrap">
-          <nav className="flex items-center gap-1.5 flex-wrap">
+    <div className="space-y-6 max-w-6xl mx-auto pb-12 text-sumi">
+      {/* 1. CLEAN SINGLE-ROW HEADER & CONTROLS */}
+      <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
+        <div>
+          <div className="mb-2">
             <Link
               href="/siswa"
-              className="flex items-center gap-1 text-sumi-charcoal hover:text-crimson transition-colors"
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white/80 hover:bg-white border border-sumi-border text-sumi text-xs font-bold transition-colors shadow-2xs"
             >
-              <Home className="w-3.5 h-3.5" />
-              <span>Beranda</span>
+              <ArrowLeft className="w-3.5 h-3.5 text-crimson" />
+              <span>Kembali</span>
             </Link>
-            <ChevronRight className="w-3.5 h-3.5 text-sumi-muted" />
-            <Link
-              href="/siswa#katalog-lomba"
-              className="text-sumi-charcoal hover:text-crimson transition-colors"
-            >
-              Ruang Lomba
-            </Link>
-            <ChevronRight className="w-3.5 h-3.5 text-sumi-muted" />
-            <span className="font-bold text-crimson">
-              Cerdas Cermat (知識クイズ)
+          </div>
+          <div className="flex items-center gap-3">
+            <h1 className="text-xl sm:text-2xl font-black text-sumi tracking-tight bg-legible-text">
+              Cerdas Cermat <span className="font-jp font-bold text-crimson">(知識クイズ)</span>
+            </h1>
+            <span className="px-2.5 py-0.5 rounded-full bg-crimson-subtle/40 text-crimson text-[11px] font-semibold">
+              KKM ≥ 85
             </span>
-          </nav>
-
-          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-crimson-subtle/40 border border-crimson/20 text-crimson text-[11px] font-bold">
-            <Lock className="w-3.5 h-3.5" />
-            <span>Target KKM: ≥ 85 Pts • Akurasi Kecepatan</span>
           </div>
         </div>
 
-        {/* Baris 2: Segmented Toolbar (Mode Toggle & Filter Kategori Materi) */}
-        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3">
-          {/* Mode Switcher Toggle */}
-          <div className="flex items-center gap-1 bg-[#FAF7F2] p-1 rounded-xl border border-sumi-border text-xs">
+        <div className="flex flex-wrap items-center gap-2.5">
+          {/* 1v1 Duel Entry Button */}
+          <Link
+            href="/siswa/lomba/cerdas-cermat/duel"
+            className="inline-flex items-center gap-1.5 px-4 py-2 rounded-full bg-sumi hover:bg-crimson text-white text-xs font-extrabold shadow-sm transition-colors active:scale-[0.98]"
+          >
+            <Swords className="w-3.5 h-3.5 text-crimson-scarlet" />
+            <span>Duel 1v1</span>
+          </Link>
+
+          {/* Mode Switcher */}
+          <div className="inline-flex items-center p-1 bg-white rounded-full border border-sumi-border/80 shadow-2xs">
             <button
               type="button"
               onClick={() => setActiveMode('berwaktu')}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
+              className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-semibold transition-all ${
                 activeMode === 'berwaktu'
-                  ? 'bg-crimson text-white shadow-sm'
+                  ? 'bg-crimson text-white'
                   : 'text-sumi-charcoal hover:text-sumi'
               }`}
             >
               <Clock className="w-3.5 h-3.5" />
-              <span>Paket Berwaktu (5 Menit)</span>
+              <span>Berwaktu</span>
             </button>
 
             <button
               type="button"
               onClick={() => setActiveMode('blitz')}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
+              className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-semibold transition-all ${
                 activeMode === 'blitz'
-                  ? 'bg-crimson text-white shadow-sm'
+                  ? 'bg-crimson text-white'
                   : 'text-sumi-charcoal hover:text-sumi'
               }`}
             >
               <Zap className="w-3.5 h-3.5" />
-              <span>Rapid Blitz (15 Detik/Soal)</span>
+              <span>Rapid Blitz</span>
             </button>
           </div>
 
-          {/* Filter Kategori Materi */}
-          <div className="flex items-center gap-1 sm:gap-1.5 bg-[#FAF7F2] p-1 rounded-xl border border-sumi-border text-xs overflow-x-auto">
-            <span className="text-[11px] font-semibold text-sumi-muted px-2 flex items-center gap-1 flex-shrink-0">
-              <SlidersHorizontal className="w-3 h-3 text-crimson" />
-              <span>Materi:</span>
-            </span>
-
-            {[
-              { key: 'all', label: 'Semua' },
-              { key: 'budaya', label: 'Budaya (Bunka)' },
-              { key: 'geografi_sejarah', label: 'Geografi & Sejarah' },
-              { key: 'kotowaza', label: 'Peribahasa (Kotowaza)' },
-              { key: 'tata_bahasa', label: 'Tata Bahasa Cepat' },
-            ].map((cat) => {
-              const isActive = selectedCategory === cat.key;
-              return (
-                <button
-                  key={cat.key}
-                  type="button"
-                  onClick={() => setSelectedCategory(cat.key as any)}
-                  className={`px-2.5 py-1 rounded-lg text-xs font-bold whitespace-nowrap transition-all ${
-                    isActive
-                      ? 'bg-sumi text-white shadow-sm'
-                      : 'text-sumi-charcoal hover:text-sumi hover:bg-white'
-                  }`}
-                >
-                  {cat.label}
-                </button>
-              );
-            })}
-          </div>
+          {/* Clean Category Dropdown */}
+          <select
+            value={selectedCategory}
+            onChange={(e) => setSelectedCategory(e.target.value as any)}
+            aria-label="Filter Materi Cerdas Cermat"
+            className="px-3.5 py-2 rounded-full bg-white border border-sumi-border/80 text-xs font-semibold text-sumi focus:outline-none focus:border-crimson cursor-pointer shadow-2xs"
+          >
+            <option value="all">Semua Materi</option>
+            <option value="budaya">Budaya (Bunka)</option>
+            <option value="geografi_sejarah">Geografi & Sejarah</option>
+            <option value="kotowaza">Kotowaza</option>
+            <option value="tata_bahasa">Tata Bahasa</option>
+          </select>
         </div>
       </div>
 
-      {/* ========================================================================= */}
-      {/* 2. RAPID QUIZ ARENA: 2 KOLOM (GRID PAKET & PAPAN SKOR / DAILY TRIVIA)       */}
-      {/* ========================================================================= */}
+      {/* 2. BENTO ARENA: 8 COLS PAKET + 4 COLS PAPAN SKOR & TRIVIA */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-start">
-        {/* ----------------------------------------------------------------------- */}
-        {/* SISI KIRI: GRID PAKET SIMULASI CEPAT (Col 7/12)                         */}
-        {/* ----------------------------------------------------------------------- */}
-        <div className="lg:col-span-7 space-y-3.5">
-          <div className="flex items-center justify-between px-1">
-            <div className="flex items-center gap-2">
-              <span className="w-2 h-4 bg-crimson rounded-full" />
-              <h2 className="text-sm font-black tracking-wide text-sumi uppercase">
-                DAFTAR PAKET SIMULASI CEPAT
-              </h2>
-            </div>
-            <span className="text-[11px] font-bold text-sumi-charcoal bg-white px-2.5 py-0.5 rounded-full border border-sumi-border shadow-xs">
-              {filteredPackages.length} Paket Latihan Tersedia
-            </span>
-          </div>
-
-          {/* Cards Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5">
-            {filteredPackages.map((pkg, idx) => {
+        {/* SISI KIRI: PAKET SIMULASI CEPAT (Col 8/12) */}
+        <div className="lg:col-span-8">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            {filteredPackages.map((pkg) => {
               return (
                 <div
                   key={pkg.id}
-                  className="bg-white rounded-2xl border border-sumi-border hover:border-crimson/40 p-4 shadow-sm hover:shadow-md transition-all flex flex-col justify-between space-y-3 relative group"
+                  className="sakura-card-bg rounded-3xl border border-[#E6DCD0] hover:border-crimson/50 p-5 shadow-2xs hover:shadow-md transition-all flex flex-col justify-between gap-4"
                 >
-                  {/* Top Badges */}
-                  <div className="flex items-center justify-between gap-2">
-                    <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-[#FAF7F2] text-crimson border border-crimson/20">
+                  <div className="flex items-center justify-between">
+                    <span className="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-[#FAF7F2] text-crimson">
                       {pkg.difficultyLevel}
                     </span>
 
                     {pkg.isCompleted && (
-                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
-                        <Check className="w-2.5 h-2.5" />
+                      <span className="inline-flex items-center gap-1.5 text-[11px] font-semibold text-emerald-700">
+                        <span className="w-2 h-2 rounded-full bg-emerald-500" />
                         <span>Selesai</span>
                       </span>
                     )}
                   </div>
 
-                  {/* Title & Metadata */}
-                  <div className="space-y-1">
-                    <h3 className="text-sm font-black text-sumi leading-snug group-hover:text-crimson transition-colors">
+                  <div>
+                    <h3 className="text-base font-bold text-sumi leading-snug line-clamp-1">
                       {pkg.title}
                     </h3>
-                    <div className="flex items-center gap-1.5 text-[11px] text-sumi-muted font-medium">
-                      <span className="flex items-center gap-0.5">
-                        <Clock className="w-3 h-3 text-sumi-charcoal" />
-                        <span>{activeMode === 'blitz' ? '15s / Soal' : `${pkg.durationMinutes} Menit`} Batas Waktu</span>
-                      </span>
-                      <span>•</span>
-                      <span>{pkg.questionCount} Soal Pilihan Ganda</span>
-                    </div>
+                    <p className="text-xs text-sumi-muted mt-1">
+                      {pkg.questionCount} Soal • {activeMode === 'blitz' ? '15s / Soal' : `${pkg.durationMinutes} Menit`}
+                    </p>
                   </div>
 
-                  {/* Target Threshold Progress Bar */}
-                  <div className="space-y-1 pt-1">
-                    <div className="h-1.5 w-full bg-[#FAF7F2] rounded-full overflow-hidden border border-sumi-border/40">
+                  <div className="space-y-1.5">
+                    <div className="flex items-center justify-between text-xs">
+                      <span className="text-sumi-muted">Skor</span>
+                      <span className="font-bold text-sumi">
+                        {pkg.bestScore !== undefined ? `${pkg.bestScore} Pts` : '—'}
+                        {pkg.bestTimeFormatted && (
+                          <span className="text-sumi-muted font-normal ml-1.5">({pkg.bestTimeFormatted})</span>
+                        )}
+                      </span>
+                    </div>
+                    <div className="h-1.5 w-full bg-[#FAF7F2] rounded-full overflow-hidden">
                       <div
-                        className="h-full bg-gradient-to-r from-amber-500 to-crimson rounded-full"
-                        style={{ width: `${pkg.bestScore || 100}%` }}
+                        className="h-full bg-crimson rounded-full"
+                        style={{ width: `${pkg.bestScore || 0}%` }}
                       />
                     </div>
-                    {pkg.bestScore !== undefined && (
-                      <div className="flex items-center justify-between text-[10px] text-sumi-charcoal font-medium">
-                        <span className="flex items-center gap-1">
-                          <CheckCircle2 className="w-3 h-3 text-emerald-600" />
-                          <span>Skor Terbaik Anda: <strong className="text-sumi font-black">{pkg.bestScore} Pts</strong> [V]</span>
-                        </span>
-                        <span className="font-mono text-sumi-muted">{pkg.bestTimeFormatted}</span>
-                      </div>
-                    )}
                   </div>
 
-                  {/* Action Buttons */}
-                  <div className="pt-2 border-t border-sumi-border/60 flex items-center gap-2">
+                  <div className="flex items-center gap-2 pt-1">
                     <button
                       type="button"
                       onClick={() => handleStartQuiz(pkg.id)}
-                      className="flex-1 py-2 px-3 rounded-xl bg-crimson hover:bg-crimson-dark text-white font-bold text-xs flex items-center justify-center gap-1.5 shadow-xs transition-all active:scale-98"
+                      className="flex-1 py-2 px-4 rounded-full bg-crimson hover:bg-crimson-dark text-white font-semibold text-xs flex items-center justify-center gap-1.5 transition-all"
                     >
                       {pkg.isCompleted ? (
                         <>
-                          <RotateCcw className="w-3 h-3" />
-                          <span>Ulangi Ujian</span>
+                          <RotateCcw className="w-3.5 h-3.5" />
+                          <span>Ulangi</span>
                         </>
                       ) : (
                         <>
-                          <Play className="w-3 h-3 fill-current" />
-                          <span>Mulai Rapid Quiz</span>
+                          <Play className="w-3.5 h-3.5 fill-current" />
+                          <span>Mulai</span>
                         </>
                       )}
                     </button>
@@ -321,10 +276,10 @@ export default function CerdasCermatLombaPage() {
                       <button
                         type="button"
                         onClick={() => setReviewPackage(pkg)}
-                        className="p-2 rounded-xl border border-sumi-border hover:bg-[#FAF7F2] text-sumi-charcoal hover:text-crimson text-xs transition-colors"
+                        className="w-9 h-9 rounded-full bg-[#FAF7F2] hover:bg-white border border-sumi-border/70 text-sumi-charcoal hover:text-crimson flex items-center justify-center transition-colors"
                         title="Lihat Pembahasan"
                       >
-                        <BookOpen className="w-3.5 h-3.5" />
+                        <BookOpen className="w-4 h-4" />
                       </button>
                     )}
                   </div>
@@ -334,152 +289,20 @@ export default function CerdasCermatLombaPage() {
           </div>
         </div>
 
-        {/* ----------------------------------------------------------------------- */}
-        {/* SISI KANAN: PAPAN SKOR KONTINGEN & DAILY TRIVIA (Col 5/12)              */}
-        {/* ----------------------------------------------------------------------- */}
-        <div className="lg:col-span-5 space-y-4 lg:sticky lg:top-4">
-          {/* Card 1: PAPAN SKOR KONTINGEN (LIVE) */}
-          <div className="bg-white rounded-2xl border border-sumi-border shadow-sm p-4 sm:p-5 space-y-3.5">
-            <div className="flex items-center justify-between pb-2 border-b border-sumi-border">
-              <div className="flex items-center gap-2">
-                <Trophy className="w-4 h-4 text-amber-500" />
-                <h3 className="text-xs sm:text-sm font-black tracking-wide text-sumi uppercase">
-                  PAPAN SKOR KONTINGEN (LIVE)
-                </h3>
-              </div>
-              <span className="text-[10px] font-bold text-amber-800 bg-amber-50 px-2 py-0.5 rounded-full border border-amber-200">
-                Peringkat Kecepatan
-              </span>
-            </div>
+        {/* SISI KANAN: PAPAN SKOR & DAILY TRIVIA (Col 4/12) */}
+        <div className="lg:col-span-4 space-y-5 lg:sticky lg:top-4">
+          <EditorialLeaderboard students={CC_LEADERBOARD} />
 
-            {/* List Top 3 Students */}
-            <div className="space-y-2">
-              {CC_LEADERBOARD.map((student) => (
-                <div
-                  key={student.rank}
-                  className={`p-2.5 rounded-xl border flex items-center justify-between gap-3 transition-colors ${
-                    student.rank === 1
-                      ? 'bg-amber-50/60 border-amber-200 shadow-2xs'
-                      : 'bg-[#FAF7F2]/60 border-sumi-border/70 hover:bg-white'
-                  }`}
-                >
-                  <div className="flex items-center gap-2.5">
-                    <span className="text-lg select-none" role="img" aria-label={`Peringkat ${student.rank}`}>
-                      {student.badgeEmoji}
-                    </span>
-                    <span className={`w-6 h-6 rounded-full font-black text-[11px] flex items-center justify-center ${student.avatarBg}`}>
-                      {student.avatarInitial}
-                    </span>
-                    <div>
-                      <span className="text-xs font-bold text-sumi block leading-tight">
-                        {student.name}
-                      </span>
-                      <span className="text-[10px] font-mono text-sumi-muted">
-                        ⏱ {student.timeFormatted}
-                      </span>
-                    </div>
-                  </div>
-
-                  <div className="text-right">
-                    <span className="text-xs font-black text-crimson font-mono block">
-                      {student.score} Pts
-                    </span>
-                    <span className="text-[9px] text-sumi-muted block">
-                      {student.rank === 1 ? 'Tertinggi' : 'Terverifikasi'}
-                    </span>
-                  </div>
-                </div>
-              ))}
-            </div>
-
-            {/* Footer Keterangan Bawah */}
-            <p className="text-[10px] text-sumi-muted italic pt-1 border-t border-sumi-border/60">
-              *Skor sama diurutkan berdasarkan waktu pengerjaan tercepat.
-            </p>
-          </div>
-
-          {/* Card 2: DAILY TRIVIA DUEL (TEBAK KILAT) */}
-          <div className="bg-white rounded-2xl border border-sumi-border shadow-sm p-4 sm:p-5 space-y-3.5">
-            <div className="flex items-center justify-between pb-2 border-b border-sumi-border">
-              <div className="flex items-center gap-2">
-                <Sparkles className="w-4 h-4 text-crimson" />
-                <h3 className="text-xs sm:text-sm font-black tracking-wide text-sumi uppercase">
-                  DAILY TRIVIA DUEL
-                </h3>
-              </div>
-              <span className="text-[10px] font-bold text-crimson bg-crimson-tint px-2 py-0.5 rounded-full">
-                Tebak Kilat
-              </span>
-            </div>
-
-            <div className="bg-[#FAF7F2] p-3.5 rounded-xl border border-sumi-border space-y-2.5">
-              <div className="text-xs text-sumi font-semibold leading-relaxed">
-                <span className="text-[11px] text-sumi-muted block uppercase font-bold mb-0.5">Soal Cepat Hari Ini:</span>
-                "Prefektur dengan wilayah terluas di Jepang?"
-              </div>
-
-              {/* 2 Option Pills */}
-              <div className="grid grid-cols-2 gap-2">
-                <button
-                  type="button"
-                  onClick={() => {
-                    setSelectedTriviaOption('A');
-                    setIsTriviaAnswered(false);
-                  }}
-                  className={`py-2 px-3 rounded-xl border text-xs font-bold transition-all text-center ${
-                    selectedTriviaOption === 'A'
-                      ? isTriviaAnswered
-                        ? 'bg-emerald-100 border-emerald-400 text-emerald-800'
-                        : 'bg-crimson text-white border-crimson'
-                      : 'bg-white border-sumi-border text-sumi-charcoal hover:border-sumi-charcoal hover:bg-white'
-                  }`}
-                >
-                  [ A. Hokkaido ]
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => {
-                    setSelectedTriviaOption('B');
-                    setIsTriviaAnswered(false);
-                  }}
-                  className={`py-2 px-3 rounded-xl border text-xs font-bold transition-all text-center ${
-                    selectedTriviaOption === 'B'
-                      ? isTriviaAnswered
-                        ? 'bg-rose-100 border-rose-400 text-rose-800'
-                        : 'bg-crimson text-white border-crimson'
-                      : 'bg-white border-sumi-border text-sumi-charcoal hover:border-sumi-charcoal hover:bg-white'
-                  }`}
-                >
-                  [ B. Tokyo ]
-                </button>
-              </div>
-
-              {/* Feedback text */}
-              {isTriviaAnswered && triviaFeedback && (
-                <div
-                  className={`p-2.5 rounded-lg text-[11px] leading-relaxed border ${
-                    selectedTriviaOption === 'A'
-                      ? 'bg-emerald-50 text-emerald-800 border-emerald-200'
-                      : 'bg-rose-50 text-rose-800 border-rose-200'
-                  }`}
-                >
-                  {triviaFeedback}
-                </div>
-              )}
-
-              {/* Button Jawab Cepat */}
-              <button
-                type="button"
-                onClick={handleAnswerTrivia}
-                disabled={!selectedTriviaOption}
-                className="w-full py-2.5 px-3 rounded-xl bg-crimson hover:bg-crimson-dark text-white font-bold text-xs flex items-center justify-center gap-1.5 shadow-xs transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                <Sparkles className="w-3.5 h-3.5 fill-white/20" />
-                <span>Jawab Cepat →</span>
-              </button>
-            </div>
-          </div>
+          <EditorialDailyTrivia
+            selectedOption={selectedTriviaOption}
+            isAnswered={isTriviaAnswered}
+            feedback={triviaFeedback}
+            onSelectOption={(opt) => {
+              setSelectedTriviaOption(opt);
+              setIsTriviaAnswered(false);
+            }}
+            onSubmit={handleAnswerTrivia}
+          />
         </div>
       </div>
 

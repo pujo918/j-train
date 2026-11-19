@@ -13,6 +13,7 @@ import {
   KanjiFlashcardItem,
   QuickDrillQuestion 
 } from '@/lib/data/kanjiModuleData';
+import { KANJI_PACKAGE_QUESTIONS } from '@/lib/data/kanjiPackageQuestions';
 import { PracticeSet, Question } from '@/types';
 import { 
   Home, 
@@ -159,7 +160,11 @@ export default function KanjiLombaPage() {
     let quizSet: PracticeSet;
 
     if (storeSet) {
-      quizSet = storeSet;
+      quizSet = {
+        ...storeSet,
+        duration_minutes: pkg.durationMinutes,
+        questions_count: pkg.questionCount,
+      };
     } else {
       quizSet = {
         id: pkg.id,
@@ -174,18 +179,10 @@ export default function KanjiLombaPage() {
       };
     }
 
-    // Get questions for this set
-    let setQuestions = questions.filter((q) => q.set_id === pkg.id);
+    // Get dedicated 15-question set for this package (fallback to store if custom Sensei set)
+    let setQuestions = KANJI_PACKAGE_QUESTIONS[pkg.id] || [];
     if (setQuestions.length === 0) {
-      // Fallback to base questions or clone with updated set_id
-      const baseQuestions = questions.filter((q) => q.set_id === 'set-kanji-1');
-      if (baseQuestions.length > 0) {
-        setQuestions = baseQuestions.map((q, idx) => ({
-          ...q,
-          id: `gen-${pkg.id}-${idx + 1}`,
-          set_id: pkg.id,
-        }));
-      }
+      setQuestions = questions.filter((q) => q.set_id === pkg.id);
     }
 
     setActiveQuizSet(quizSet);
@@ -226,7 +223,7 @@ export default function KanjiLombaPage() {
         <div className="space-y-4">
           <button
             onClick={() => setIsTakingQuiz(false)}
-            className="text-xs font-semibold text-sumi-charcoal hover:text-crimson flex items-center gap-1.5 transition-colors"
+            className="text-xs font-extrabold text-sumi hover:text-crimson inline-flex items-center gap-1.5 transition-colors px-3 py-1.5 rounded-full bg-white/75 backdrop-blur-sm border border-white/80 shadow-2xs"
           >
             <ArrowLeft className="w-4 h-4" />
             <span>Kembali ke Dashboard Lomba Kanji</span>
@@ -244,7 +241,7 @@ export default function KanjiLombaPage() {
       <div className="space-y-4">
         <button
           onClick={() => setIsTakingQuiz(false)}
-          className="text-xs font-semibold text-sumi-charcoal hover:text-crimson flex items-center gap-1.5 transition-colors"
+          className="text-xs font-extrabold text-sumi hover:text-crimson inline-flex items-center gap-1.5 transition-colors px-3 py-1.5 rounded-full bg-white/75 backdrop-blur-sm border border-white/80 shadow-2xs"
         >
           <ArrowLeft className="w-4 h-4" />
           <span>Kembali ke Dashboard Lomba Kanji</span>
@@ -261,118 +258,77 @@ export default function KanjiLombaPage() {
     : 0;
 
   return (
-    <div className="space-y-3 max-w-7xl mx-auto">
-      {/* 1. SUB-HEADER BAR: Breadcrumb Navigation & Passing Target KKM */}
-      <div className="bg-white rounded-2xl border border-sumi-border px-4 py-2.5 flex flex-col sm:flex-row sm:items-center justify-between gap-2 shadow-2xs">
-        {/* Sisi Kiri: Breadcrumb Navigasi */}
-        <div className="flex items-center gap-1.5 text-xs text-sumi-charcoal flex-wrap">
-          <Link
-            href="/siswa"
-            className="flex items-center gap-1 text-sumi-charcoal hover:text-crimson transition-colors"
-          >
-            <Home className="w-3.5 h-3.5" />
-            <span>Beranda</span>
-          </Link>
-          <ChevronRight className="w-3.5 h-3.5 text-sumi-muted" />
-          <Link
-            href="/siswa#katalog-lomba"
-            className="text-sumi-charcoal hover:text-crimson transition-colors"
-          >
-            Ruang Lomba
-          </Link>
-          <ChevronRight className="w-3.5 h-3.5 text-sumi-muted" />
-          <span className="font-bold text-crimson flex items-center gap-1.5">
-            <span>Kanji (漢字)</span>
-            <span className="text-[10px] bg-crimson-tint text-crimson font-black px-2 py-0.5 rounded-full uppercase tracking-wider">
-              Auto-Graded
+    <div className="space-y-6 max-w-6xl mx-auto pb-12">
+      {/* 1. CLEAN SINGLE-ROW HEADER & CONTROLS */}
+      <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
+        <div>
+          <div className="mb-2">
+            <Link
+              href="/siswa"
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white/80 hover:bg-white border border-sumi-border text-sumi text-xs font-bold transition-colors shadow-2xs"
+            >
+              <ArrowLeft className="w-3.5 h-3.5 text-crimson" />
+              <span>Kembali</span>
+            </Link>
+          </div>
+          <div className="flex items-center gap-3">
+            <h1 className="text-xl sm:text-2xl font-black text-sumi tracking-tight bg-legible-text">
+              Latihan Kanji <span className="font-jp font-bold text-crimson">(漢字)</span>
+            </h1>
+            <span className="px-2.5 py-0.5 rounded-full bg-amber-50 border border-amber-200/80 text-amber-800 text-[11px] font-semibold">
+              KKM ≥ 80
             </span>
-          </span>
+          </div>
         </div>
 
-        {/* Sisi Kanan: Target KKM Pembinaan & Link Switch */}
-        <div className="flex items-center gap-2.5 self-end sm:self-auto flex-wrap">
-          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-50 border border-amber-200 text-amber-800 text-xs font-bold shadow-2xs">
-            <Target className="w-3.5 h-3.5 text-amber-600" />
-            <span>🎯 Target KKM Pembinaan: ≥ 80 Poin</span>
+        <div className="flex flex-wrap items-center gap-2.5">
+          {/* Mode Switcher */}
+          <div className="inline-flex items-center p-1 bg-white rounded-full border border-sumi-border/80 shadow-2xs">
+            <button
+              onClick={() => setActiveMode('exam')}
+              className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-semibold transition-all ${
+                activeMode === 'exam'
+                  ? 'bg-crimson text-white'
+                  : 'text-sumi-charcoal hover:text-crimson'
+              }`}
+            >
+              <BookOpen className="w-3.5 h-3.5" />
+              <span>Kuis Ujian</span>
+            </button>
+            <button
+              onClick={() => setActiveMode('flashcard')}
+              className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-semibold transition-all ${
+                activeMode === 'flashcard'
+                  ? 'bg-crimson text-white'
+                  : 'text-sumi-charcoal hover:text-crimson'
+              }`}
+            >
+              <Layers className="w-3.5 h-3.5" />
+              <span>Kartu Kilas</span>
+            </button>
           </div>
 
-          <div className="hidden lg:inline-flex items-center text-[11px] text-sumi-muted bg-washi px-2.5 py-1 rounded-md border border-sumi-border/70 font-mono">
-            Rumus: (Benar / Total) × 100
-          </div>
-
-          <Link
-            href="/siswa"
-            className="inline-flex items-center gap-1 text-xs font-semibold text-sumi hover:text-crimson transition-colors"
+          {/* Clean Level Dropdown */}
+          <select
+            value={selectedLevel}
+            onChange={(e) => setSelectedLevel(e.target.value as any)}
+            aria-label="Filter Tingkat Kanji"
+            className="px-3.5 py-2 rounded-full bg-white border border-sumi-border/80 text-xs font-semibold text-sumi focus:outline-none focus:border-crimson cursor-pointer shadow-2xs"
           >
-            <ArrowLeft className="w-3.5 h-3.5" />
-            <span className="hidden md:inline">Pilih Cabang Lain</span>
-          </Link>
-        </div>
-      </div>
-
-      {/* 2. CONTROL STRIP: Mode Switcher (Tab) & Level Filter Pills */}
-      <div className="bg-white rounded-2xl border border-sumi-border px-3.5 py-2 flex flex-col md:flex-row md:items-center justify-between gap-2.5 shadow-2xs">
-        {/* Sisi Kiri: Mode Belajar Toggle Tab */}
-        <div className="flex items-center p-0.5 bg-washi rounded-xl border border-sumi-border/60 self-start md:self-auto">
-          <button
-            onClick={() => setActiveMode('exam')}
-            className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-extrabold transition-all ${
-              activeMode === 'exam'
-                ? 'bg-crimson text-white shadow-2xs'
-                : 'text-sumi-charcoal hover:text-crimson'
-            }`}
-          >
-            <BookOpen className="w-3.5 h-3.5" />
-            <span>Paket Kuis Ujian</span>
-          </button>
-          <button
-            onClick={() => setActiveMode('flashcard')}
-            className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-extrabold transition-all ${
-              activeMode === 'flashcard'
-                ? 'bg-crimson text-white shadow-2xs'
-                : 'text-sumi-charcoal hover:text-crimson'
-            }`}
-          >
-            <Layers className="w-3.5 h-3.5" />
-            <span>Kartu Kilas (Flashcard)</span>
-          </button>
-        </div>
-
-        {/* Sisi Kanan: Quick Level Filter Pills */}
-        <div className="flex items-center gap-1.5 overflow-x-auto pb-0.5 md:pb-0 scrollbar-thin">
-          <span className="text-[11px] font-bold text-sumi-muted mr-1 hidden sm:inline">
-            Tingkat:
-          </span>
-          {[
-            { id: 'all', label: 'Semua' },
-            { id: 'N5', label: 'N5 Dasar' },
-            { id: 'N4', label: 'N4 Menengah' },
-            { id: 'N3', label: 'N3 Mahir' },
-            { id: 'Yojijukugo', label: 'Yojijukugo' },
-          ].map((lvl) => {
-            const isSelected = selectedLevel === lvl.id;
-            return (
-              <button
-                key={lvl.id}
-                onClick={() => setSelectedLevel(lvl.id as any)}
-                className={`px-3 py-1 rounded-full text-xs font-bold transition-all whitespace-nowrap ${
-                  isSelected
-                    ? 'bg-sumi text-white shadow-2xs'
-                    : 'bg-white border border-sumi-border text-sumi-charcoal hover:border-crimson hover:text-crimson'
-                }`}
-              >
-                {lvl.label}
-              </button>
-            );
-          })}
+            <option value="all">Semua Tingkat</option>
+            <option value="N5">N5 Dasar</option>
+            <option value="N4">N4 Menengah</option>
+            <option value="N3">N3 Mahir</option>
+            <option value="Yojijukugo">Yojijukugo</option>
+          </select>
         </div>
       </div>
 
       {/* 3. MAIN WORKBENCH CONTENT */}
       {activeMode === 'exam' ? (
         /* MODE 1: PAKET KUIS UJIAN (EXAM DRILL CARDS) */
-        <div className="space-y-3">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+        <div className="space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
             {filteredPackages.map((pkg) => {
               const isLocked = pkg.status === 'draft';
               const isPassed = (pkg.bestScore ?? 0) >= 80;
@@ -380,127 +336,104 @@ export default function KanjiLombaPage() {
               return (
                 <div
                   key={pkg.id}
-                  className={`bg-white rounded-2xl border transition-all p-4 flex flex-col justify-between space-y-3 ${
+                  className={`surface-kanji-washi rounded-3xl border transition-all p-5 flex flex-col justify-between gap-4 ${
                     isLocked
                       ? 'border-sumi-border/60 bg-zinc-50/50 opacity-80'
-                      : 'border-sumi-border hover:border-crimson/50 hover:shadow-card'
+                      : 'border-sumi-border/80 hover:border-crimson/40 hover:shadow-sm'
                   }`}
                 >
-                  <div className="space-y-2">
-                    {/* Header: Level Badge & Status Badge */}
-                    <div className="flex items-center justify-between gap-2">
-                      <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-crimson-tint text-crimson">
-                        {pkg.levelLabel}
+                  {/* Top Row: Level & Dot Status */}
+                  <div className="flex items-center justify-between">
+                    <span className="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-[#FAF7F2] text-crimson">
+                      {pkg.levelLabel}
+                    </span>
+
+                    {pkg.status === 'selesai' ? (
+                      <span className={`inline-flex items-center gap-1.5 text-[11px] font-semibold ${
+                        isPassed ? 'text-emerald-700' : 'text-amber-700'
+                      }`}>
+                        <span className={`w-2 h-2 rounded-full ${isPassed ? 'bg-emerald-500' : 'bg-amber-500'}`} />
+                        <span>{isPassed ? 'Lulus' : 'Selesai'}</span>
                       </span>
-
-                      {pkg.status === 'selesai' ? (
-                        <span className={`inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full ${
-                          isPassed
-                            ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
-                            : 'bg-amber-50 text-amber-700 border border-amber-200'
-                        }`}>
-                          <CheckCircle2 className="w-3 h-3 text-emerald-600" />
-                          <span>Selesai {pkg.bestScore ? `(${pkg.bestScore}/100)` : ''}</span>
-                        </span>
-                      ) : pkg.status === 'aktif' ? (
-                        <span className="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full bg-blue-50 text-blue-700 border border-blue-200">
-                          <span className="w-1.5 h-1.5 rounded-full bg-blue-600 animate-pulse" />
-                          <span>Aktif</span>
-                        </span>
-                      ) : (
-                        <span className="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full bg-zinc-100 text-zinc-500 border border-zinc-200">
-                          <Lock className="w-3 h-3" />
-                          <span>Terkunci (Draft)</span>
-                        </span>
-                      )}
-                    </div>
-
-                    {/* Title & Description */}
-                    <div>
-                      <h3 className="text-sm font-extrabold text-sumi leading-snug line-clamp-1">
-                        {pkg.title}
-                      </h3>
-                      <p className="text-xs text-sumi-charcoal mt-0.5 line-clamp-2 leading-relaxed">
-                        {pkg.description}
-                      </p>
-                    </div>
-
-                    {/* Metadata Specs */}
-                    <div className="flex items-center gap-2.5 text-[11px] text-sumi-muted pt-0.5">
-                      <span className="flex items-center gap-1">
-                        <BookOpen className="w-3 h-3 text-sumi-charcoal" />
-                        {pkg.questionCount} Soal PG
+                    ) : pkg.status === 'aktif' ? (
+                      <span className="inline-flex items-center gap-1.5 text-[11px] font-semibold text-blue-700">
+                        <span className="w-2 h-2 rounded-full bg-blue-600" />
+                        <span>Aktif</span>
                       </span>
-                      <span>•</span>
-                      <span className="flex items-center gap-1">
-                        <Clock className="w-3 h-3 text-sumi-charcoal" />
-                        {pkg.durationMinutes} Menit
+                    ) : (
+                      <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-zinc-400">
+                        <Lock className="w-3 h-3" />
+                        <span>Terkunci</span>
                       </span>
-                      <span>•</span>
-                      <span className="font-bold text-amber-700">KKM: 80 Poin</span>
+                    )}
+                  </div>
+
+                  {/* Title & Concise Meta */}
+                  <div>
+                    <h3 className="text-base font-bold text-sumi leading-snug line-clamp-1">
+                      {pkg.title}
+                    </h3>
+                    <p className="text-xs text-sumi-muted mt-1">
+                      {pkg.questionCount} Soal • {pkg.durationMinutes} Menit
+                    </p>
+                  </div>
+
+                  {/* Clean Progress */}
+                  <div className="space-y-1.5">
+                    <div className="flex items-center justify-between text-xs">
+                      <span className="text-sumi-muted">Skor</span>
+                      <span className={`font-bold ${
+                        pkg.bestScore !== undefined
+                          ? isPassed ? 'text-emerald-700' : 'text-crimson'
+                          : 'text-sumi-muted'
+                      }`}>
+                        {pkg.bestScore !== undefined ? `${pkg.bestScore}/100` : '—'}
+                      </span>
                     </div>
-
-                    {/* Visual Progress / Target KKM Bar */}
-                    <div className="space-y-1 pt-1.5 border-t border-sumi-border/70">
-                      <div className="flex items-center justify-between text-[11px]">
-                        <span className="font-semibold text-sumi-charcoal">
-                          {pkg.bestScore !== undefined ? 'Skor Tertinggi:' : 'Status:'}
-                        </span>
-                        {pkg.bestScore !== undefined ? (
-                          <span className={`font-mono font-black ${isPassed ? 'text-emerald-600' : 'text-crimson'}`}>
-                            {pkg.bestScore} / 100 {isPassed ? '✓ Lulus' : ''}
-                          </span>
-                        ) : (
-                          <span className="text-sumi-muted italic text-[10px]">Belum Ada Riwayat</span>
-                        )}
-                      </div>
-
-                      {/* Progress Track */}
-                      <div className="w-full h-1.5 bg-zinc-100 rounded-full overflow-hidden">
-                        <div
-                          className={`h-full transition-all duration-500 ${
-                            isPassed ? 'bg-emerald-600' : pkg.bestScore ? 'bg-crimson' : 'bg-transparent'
-                          }`}
-                          style={{ width: `${pkg.bestScore ?? 0}%` }}
-                        />
-                      </div>
+                    <div className="w-full h-1.5 bg-[#FAF7F2] rounded-full overflow-hidden">
+                      <div
+                        className={`h-full rounded-full transition-all duration-500 ${
+                          isPassed ? 'bg-emerald-500' : pkg.bestScore ? 'bg-crimson' : 'bg-transparent'
+                        }`}
+                        style={{ width: `${pkg.bestScore ?? 0}%` }}
+                      />
                     </div>
                   </div>
 
-                  {/* Action Buttons */}
+                  {/* Clean Action Row */}
                   <div className="pt-1">
                     {pkg.status === 'selesai' ? (
-                      <div className="grid grid-cols-2 gap-2">
+                      <div className="flex items-center gap-2">
                         <button
                           onClick={() => handleLaunchPackage(pkg)}
-                          className="py-1.5 px-3 rounded-xl font-bold text-xs bg-crimson hover:bg-crimson-dark text-white flex items-center justify-center gap-1.5 shadow-2xs transition-all"
+                          className="flex-1 py-2 px-4 rounded-full font-semibold text-xs bg-crimson hover:bg-crimson-dark text-white flex items-center justify-center gap-1.5 transition-all"
                         >
-                          <RotateCcw className="w-3 h-3" />
+                          <RotateCcw className="w-3.5 h-3.5" />
                           <span>Ulangi</span>
                         </button>
                         <button
                           onClick={() => setReviewPackage(pkg)}
-                          className="py-1.5 px-3 rounded-xl font-bold text-xs bg-white hover:bg-washi text-sumi-charcoal border border-sumi-border flex items-center justify-center gap-1.5 transition-all"
+                          className="w-9 h-9 rounded-full bg-[#FAF7F2] hover:bg-white text-sumi-charcoal border border-sumi-border/70 flex items-center justify-center transition-all"
+                          title="Lihat Pembahasan"
                         >
-                          <CheckCircle2 className="w-3 h-3 text-emerald-600" />
-                          <span>Pembahasan</span>
+                          <CheckCircle2 className="w-4 h-4 text-emerald-600" />
                         </button>
                       </div>
                     ) : pkg.status === 'aktif' ? (
                       <button
                         onClick={() => handleLaunchPackage(pkg)}
-                        className="w-full py-2 rounded-xl font-bold text-xs bg-crimson hover:bg-crimson-dark text-white flex items-center justify-center gap-2 shadow-2xs transition-all"
+                        className="w-full py-2 px-4 rounded-full font-semibold text-xs bg-crimson hover:bg-crimson-dark text-white flex items-center justify-center gap-1.5 transition-all"
                       >
                         <Play className="w-3.5 h-3.5 fill-white" />
-                        <span>Mulai Latihan</span>
+                        <span>Mulai</span>
                       </button>
                     ) : (
                       <button
                         disabled
-                        className="w-full py-2 rounded-xl font-bold text-xs bg-zinc-100 text-zinc-400 border border-zinc-200 cursor-not-allowed flex items-center justify-center gap-1.5"
+                        className="w-full py-2 px-4 rounded-full font-semibold text-xs bg-zinc-100 text-zinc-400 cursor-not-allowed flex items-center justify-center gap-1.5"
                       >
                         <Lock className="w-3.5 h-3.5" />
-                        <span>Terkunci (Materi Sensei)</span>
+                        <span>Terkunci</span>
                       </button>
                     )}
                   </div>
@@ -523,7 +456,7 @@ export default function KanjiLombaPage() {
         </div>
       ) : (
         /* MODE 2: KARTU KILAS INTERAKTIF (3D FLASHCARD WORKBENCH) */
-        <div className="bg-white rounded-2xl border border-sumi-border p-6 space-y-6 shadow-2xs">
+        <div className="surface-kanji-washi rounded-2xl border border-[#E5DCCB] p-6 space-y-6 shadow-2xs">
           {/* Flashcard Header Controls & Stats */}
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-sumi-border/70">
             <div className="flex items-center gap-2.5">
@@ -557,7 +490,7 @@ export default function KanjiLombaPage() {
               {/* 3D Flip Card Container */}
               <div
                 onClick={() => setIsFlipped(!isFlipped)}
-                className="relative w-full max-w-xl mx-auto h-[320px] sm:h-[350px] cursor-pointer select-none [perspective:1000px]"
+                className="relative w-full max-w-xl mx-auto h-[470px] sm:h-[370px] cursor-pointer select-none [perspective:1000px]"
               >
                 <div
                   className={`relative w-full h-full duration-500 [transform-style:preserve-3d] transition-transform rounded-3xl ${
@@ -591,7 +524,7 @@ export default function KanjiLombaPage() {
                   </div>
 
                   {/* BACK SIDE (ONYOMI, KUNYOMI, MEANING, EXAMPLES) */}
-                  <div className="absolute inset-0 w-full h-full bg-white rounded-3xl border-2 border-crimson/40 shadow-card p-6 flex flex-col justify-between [backface-visibility:hidden] [transform:rotateY(180deg)]">
+                  <div className="absolute inset-0 w-full h-full bg-white rounded-3xl border-2 border-crimson/40 shadow-card p-4 sm:p-6 flex flex-col justify-between overflow-y-auto [backface-visibility:hidden] [transform:rotateY(180deg)]">
                     {/* Top back row */}
                     <div className="flex items-center justify-between border-b border-sumi-border/60 pb-2">
                       <div className="flex items-center gap-2">

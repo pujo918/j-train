@@ -25,13 +25,13 @@ export const QuestionCard: React.FC<QuestionCardProps> = ({
   const isMultipleChoice = question.options && question.options.length > 0;
 
   return (
-    <div className="bg-white rounded-3xl border border-sumi-border shadow-card p-5 sm:p-7 space-y-6">
+    <div className="panel-frost-glass rounded-3xl p-5 sm:p-7 space-y-6">
       {/* Header Info */}
-      <div className="flex items-center justify-between pb-3 border-b border-sumi-border">
-        <span className="text-xs font-black tracking-wider uppercase text-crimson bg-crimson-tint px-3 py-1 rounded-full">
+      <div className="flex items-center justify-between pb-3 border-b border-sumi/10">
+        <span className="text-xs font-black tracking-wider uppercase text-white bg-sumi px-3 py-1 rounded-lg">
           Soal {currentIndex + 1} dari {totalQuestions}
         </span>
-        <span className="text-xs font-semibold text-sumi-muted">
+        <span className="text-xs font-bold text-[#6B5D4F]">
           Poin: {(100 / totalQuestions).toFixed(0)} Pts
         </span>
       </div>
@@ -57,13 +57,13 @@ export const QuestionCard: React.FC<QuestionCardProps> = ({
             const isCorrect = isReviewed && option.key === question.correct_key;
             const isWrongSelected = isReviewed && isSelected && option.key !== question.correct_key;
 
-            let buttonClass = 'bg-white border-sumi-border hover:border-crimson text-sumi';
+            let buttonClass = 'bg-[#FFFDF9]/90 border-[#DED3C1] hover:border-[#B91C1C] hover:bg-[#FDF2F2]/60 text-sumi';
             if (isSelected && !isReviewed) {
-              buttonClass = 'bg-crimson-subtle border-crimson text-crimson font-bold shadow-sm ring-1 ring-crimson';
+              buttonClass = 'bg-[#FDF2F2] border-[#B91C1C] text-[#8B151B] font-bold shadow-sm ring-1 ring-[#B91C1C]';
             } else if (isCorrect) {
-              buttonClass = 'bg-emerald-50 border-emerald-500 text-emerald-800 font-bold ring-1 ring-emerald-500';
+              buttonClass = 'bg-emerald-50 border-emerald-600 text-emerald-900 font-bold ring-1 ring-emerald-600';
             } else if (isWrongSelected) {
-              buttonClass = 'bg-red-50 border-red-500 text-red-800 font-bold ring-1 ring-red-500';
+              buttonClass = 'bg-red-50 border-red-500 text-red-900 font-bold ring-1 ring-red-500';
             }
 
             return (

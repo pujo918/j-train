@@ -4,8 +4,7 @@ import React, { useState, useRef, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { 
-  Home, 
-  ChevronRight, 
+  ArrowLeft, 
   Play, 
   Pause, 
   RotateCcw, 
@@ -360,92 +359,66 @@ export default function RodokuLombaPage() {
       ` }} />
 
       {/* ========================================================================= */}
-      {/* 1. SUB-HEADER & TOOLBAR KONTROL TEKS (COMPACT TOP STRIP)                   */}
+      {/* 1. CLEAN SUB-HEADER & TOOLBAR KONTROL TEKS (2 COMPACT FROSTED BARS)      */}
       {/* ========================================================================= */}
-      <div className="bg-white rounded-2xl border border-sumi-border shadow-sm p-4 sm:p-5 space-y-3.5">
-        {/* Baris 1: Breadcrumb Navigasi di Kiri & Badge Status Mode di Kanan */}
-        <div className="flex items-center justify-between gap-3 text-xs border-b border-sumi-border pb-3 flex-wrap">
-          <nav className="flex items-center gap-1.5 flex-wrap">
+      <div className="space-y-2.5">
+        {/* Baris 1: Breadcrumb di Kiri & Selector Naskah Sastra di Kanan */}
+        <div className="panel-frost-glass rounded-2xl px-4 py-2.5 flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 text-xs">
+          <nav className="flex items-center gap-2.5 flex-wrap">
             <Link
               href="/siswa"
-              className="flex items-center gap-1 text-sumi-charcoal hover:text-crimson transition-colors"
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white/75 hover:bg-white border border-sumi-border text-sumi font-bold transition-colors shadow-2xs"
             >
-              <Home className="w-3.5 h-3.5" />
-              <span>Beranda</span>
+              <ArrowLeft className="w-3.5 h-3.5 text-crimson" />
+              <span>Kembali</span>
             </Link>
-            <ChevronRight className="w-3.5 h-3.5 text-sumi-muted" />
-            <Link
-              href="/siswa#katalog-lomba"
-              className="text-sumi-charcoal hover:text-crimson transition-colors"
-            >
-              Ruang Lomba
-            </Link>
-            <ChevronRight className="w-3.5 h-3.5 text-sumi-muted" />
-            <span className="font-bold text-crimson">
+            <span className="font-extrabold text-crimson">
               Rodoku (朗読)
             </span>
           </nav>
 
-          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-crimson-subtle/40 border border-crimson/20 text-crimson text-[11px] font-bold">
-            <Lock className="w-3.5 h-3.5" />
-            <span>Mode Workbench Interaktif • Prototype Suara Nihonjin Asli</span>
+          {/* Compact Dropdown Selector Naskah Sastra */}
+          <div className="flex items-center gap-2">
+            <span className="text-[11px] font-bold text-sumi-charcoal">Naskah:</span>
+            <select
+              value={selectedStoryId}
+              onChange={(e) => handleSelectStory(e.target.value)}
+              aria-label="Pilih Naskah Sastra Rodoku"
+              className="px-3.5 py-1.5 rounded-xl bg-white/75 hover:bg-white/95 border border-white/80 text-xs font-bold text-sumi focus:outline-none focus:border-crimson cursor-pointer shadow-2xs"
+            >
+              {RODOKU_STORIES.map((story) => (
+                <option key={story.id} value={story.id}>
+                  {story.titleKanji} — {story.author}
+                </option>
+              ))}
+            </select>
           </div>
         </div>
 
-        {/* Baris 1.5: Pilihan 5 Karya Sastra Rodoku */}
-        <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-none pt-1">
-          <span className="text-[11px] font-bold text-sumi-charcoal shrink-0 flex items-center gap-1">
-            <BookOpen className="w-3.5 h-3.5 text-crimson" />
-            <span>Pilih Naskah Sastra:</span>
-          </span>
-          {RODOKU_STORIES.map((story) => {
-            const isSelected = selectedStoryId === story.id;
-            return (
-              <button
-                key={story.id}
-                onClick={() => handleSelectStory(story.id)}
-                className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all shrink-0 flex items-center gap-1.5 border ${
-                  isSelected
-                    ? 'bg-crimson text-white border-crimson shadow-sm'
-                    : 'bg-[#FAF7F2] text-sumi-charcoal border-sumi-border hover:bg-[#F5EFE6] hover:text-sumi'
-                }`}
-              >
-                <span>{story.titleKanji}</span>
-                <span className={`text-[10px] px-1.5 py-0.2 rounded-md ${
-                  isSelected ? 'bg-white/20 text-white' : 'bg-sumi-muted/20 text-sumi-charcoal'
-                }`}>
-                  {story.author}
-                </span>
-              </button>
-            );
-          })}
-        </div>
-
-        {/* Baris 2: Judul Naskah & Interactive Controls Toolbar */}
-        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+        {/* Baris 2: Judul Naskah & Unified Clean Controls Toolbar */}
+        <div className="panel-frost-glass rounded-2xl px-4 py-3 flex flex-col lg:flex-row lg:items-center justify-between gap-3">
           <div className="space-y-0.5">
             <div className="flex items-center gap-2">
               <BookOpen className="w-4 h-4 text-crimson" />
-              <h1 className="text-base sm:text-lg font-black text-sumi">
-                Teks Latihan: <span className="text-crimson font-serif">{activeStory.titleKanji}</span> ({activeStory.author})
+              <h1 className="text-sm sm:text-base font-extrabold text-sumi">
+                <span className="text-crimson font-serif">{activeStory.titleKanji}</span>{' '}
+                <span className="font-semibold text-sumi-charcoal text-xs sm:text-sm">({activeStory.author})</span>
               </h1>
             </div>
             <p className="text-xs text-sumi-charcoal">
-              {activeStory.description} • Tempo: <span className="font-medium text-sumi">{activeStory.tempo}</span>
+              {activeStory.description} • Tempo: <span className="font-semibold text-sumi">{activeStory.tempo}</span>
             </p>
           </div>
 
-          {/* Interactive Controls Toolbar */}
-          <div className="flex items-center gap-2 sm:gap-3 flex-wrap text-xs">
-            {/* Segmented Button Ukuran Teks */}
-            <div className="flex items-center gap-1 bg-[#FAF7F2] p-1 rounded-xl border border-sumi-border">
-              <span className="text-[11px] font-semibold text-sumi-muted px-2">Ukuran Teks:</span>
+          {/* Single-line Clean Controls */}
+          <div className="flex items-center gap-2 flex-wrap text-xs">
+            <div className="inline-flex items-center gap-1 bg-white/70 p-1 rounded-xl border border-white/80">
               <button
                 type="button"
                 onClick={() => setFontSize('md')}
-                className={`px-2.5 py-1 rounded-lg text-xs font-bold transition-all ${
+                className={`px-2.5 py-1 rounded-lg text-[11px] font-bold transition-all ${
                   fontSize === 'md'
-                    ? 'bg-crimson text-white shadow-sm'
+                    ? 'bg-crimson text-white shadow-2xs'
                     : 'text-sumi-charcoal hover:text-sumi'
                 }`}
               >
@@ -454,20 +427,20 @@ export default function RodokuLombaPage() {
               <button
                 type="button"
                 onClick={() => setFontSize('lg')}
-                className={`px-2.5 py-1 rounded-lg text-xs font-bold transition-all ${
+                className={`px-2.5 py-1 rounded-lg text-[11px] font-bold transition-all ${
                   fontSize === 'lg'
-                    ? 'bg-crimson text-white shadow-sm'
+                    ? 'bg-crimson text-white shadow-2xs'
                     : 'text-sumi-charcoal hover:text-sumi'
                 }`}
               >
-                Besar (Aktif)
+                Besar
               </button>
               <button
                 type="button"
                 onClick={() => setFontSize('xl')}
-                className={`px-2.5 py-1 rounded-lg text-xs font-bold transition-all ${
+                className={`px-2.5 py-1 rounded-lg text-[11px] font-bold transition-all ${
                   fontSize === 'xl'
-                    ? 'bg-crimson text-white shadow-sm'
+                    ? 'bg-crimson text-white shadow-2xs'
                     : 'text-sumi-charcoal hover:text-sumi'
                 }`}
               >
@@ -475,26 +448,25 @@ export default function RodokuLombaPage() {
               </button>
             </div>
 
-            {/* Toggle Furigana */}
-            <div className="flex items-center bg-[#FAF7F2] p-1 rounded-xl border border-sumi-border">
-              <span className="text-[11px] font-semibold text-sumi-muted px-2">Furigana:</span>
+            <div className="inline-flex items-center gap-1 bg-white/70 p-1 rounded-xl border border-white/80">
+              <span className="text-[11px] font-bold text-sumi-charcoal pl-2 pr-1">Furigana:</span>
               <button
                 type="button"
                 onClick={() => setShowFurigana(true)}
-                className={`px-2.5 py-1 rounded-lg text-xs font-bold transition-all ${
+                className={`px-2.5 py-1 rounded-lg text-[11px] font-bold transition-all ${
                   showFurigana
-                    ? 'bg-crimson text-white shadow-sm'
+                    ? 'bg-crimson text-white shadow-2xs'
                     : 'text-sumi-charcoal hover:text-sumi'
                 }`}
               >
-                ON (✓)
+                ON
               </button>
               <button
                 type="button"
                 onClick={() => setShowFurigana(false)}
-                className={`px-2.5 py-1 rounded-lg text-xs font-bold transition-all ${
+                className={`px-2.5 py-1 rounded-lg text-[11px] font-bold transition-all ${
                   !showFurigana
-                    ? 'bg-sumi text-white shadow-sm'
+                    ? 'bg-sumi text-white shadow-2xs'
                     : 'text-sumi-charcoal hover:text-sumi'
                 }`}
               >
@@ -503,25 +475,25 @@ export default function RodokuLombaPage() {
             </div>
 
             {/* Toggle Tanda Jeda */}
-            <div className="flex items-center bg-[#FAF7F2] p-1 rounded-xl border border-sumi-border">
-              <span className="text-[11px] font-semibold text-sumi-muted px-2">Tanda Jeda:</span>
+            <div className="inline-flex items-center gap-1 bg-white/70 p-1 rounded-xl border border-white/80">
+              <span className="text-[11px] font-bold text-sumi-charcoal pl-2 pr-1">Tanda Jeda:</span>
               <button
                 type="button"
                 onClick={() => setShowPauses(true)}
-                className={`px-2.5 py-1 rounded-lg text-xs font-bold transition-all ${
+                className={`px-2.5 py-1 rounded-lg text-[11px] font-bold transition-all ${
                   showPauses
-                    ? 'bg-crimson text-white shadow-sm'
+                    ? 'bg-crimson text-white shadow-2xs'
                     : 'text-sumi-charcoal hover:text-sumi'
                 }`}
               >
-                ON ✓
+                ON
               </button>
               <button
                 type="button"
                 onClick={() => setShowPauses(false)}
-                className={`px-2.5 py-1 rounded-lg text-xs font-bold transition-all ${
+                className={`px-2.5 py-1 rounded-lg text-[11px] font-bold transition-all ${
                   !showPauses
-                    ? 'bg-sumi text-white shadow-sm'
+                    ? 'bg-sumi text-white shadow-2xs'
                     : 'text-sumi-charcoal hover:text-sumi'
                 }`}
               >
@@ -537,10 +509,10 @@ export default function RodokuLombaPage() {
       {/* ========================================================================= */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-start">
         {/* ----------------------------------------------------------------------- */}
-        {/* SISI KIRI: LEMBAR BACAAN INTERAKTIF (Col 7/12)                          */}
+        {/* SISI KIRI: LEMBAR BACAAN INTERAKTIF (LIGHT FROSTED GLASS, Col 7/12)    */}
         {/* ----------------------------------------------------------------------- */}
-        <div className="lg:col-span-7 bg-white rounded-2xl border border-sumi-border shadow-sm p-4 sm:p-5 space-y-4 flex flex-col">
-          <div className="flex items-center justify-between pb-3 border-b border-sumi-border">
+        <div className="lg:col-span-7 panel-frost-glass rounded-3xl p-4 sm:p-5 space-y-4 flex flex-col">
+          <div className="flex items-center justify-between pb-3 border-b border-sumi/10">
             <div className="flex items-center gap-2">
               <span className="w-2 h-4 bg-crimson rounded-full" />
               <h2 className="text-sm sm:text-base font-black tracking-wide text-sumi uppercase">
@@ -612,13 +584,13 @@ export default function RodokuLombaPage() {
         </div>
 
         {/* ----------------------------------------------------------------------- */}
-        {/* SISI KANAN: AUDIO MODEL & STUDIO PEREKAM (Col 5/12)                     */}
+        {/* SISI KANAN: AUDIO MODEL & STUDIO PEREKAM (PAGODA WASHI, Col 5/12)     */}
         {/* ----------------------------------------------------------------------- */}
-        <div className="lg:col-span-5 bg-white rounded-2xl border border-sumi-border shadow-sm p-4 sm:p-5 space-y-4 lg:sticky lg:top-4 flex flex-col justify-between">
-          <div className="flex items-center justify-between pb-3 border-b border-sumi-border">
+        <div className="lg:col-span-5 panel-washi-pagoda rounded-3xl border border-[#DFCBB8] p-4 sm:p-5 space-y-4 lg:sticky lg:top-4 flex flex-col justify-between">
+          <div className="flex items-center justify-between pb-3 border-b border-[#D8C1AE]/70">
             <div className="flex items-center gap-2">
               <Mic className="w-4 h-4 text-crimson" />
-              <h2 className="text-sm sm:text-base font-black tracking-wide text-sumi uppercase">
+              <h2 className="text-sm sm:text-base font-black tracking-wide text-[#6B2D26] uppercase">
                 AUDIO MODEL & STUDIO PEREKAM
               </h2>
             </div>

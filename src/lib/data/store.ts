@@ -27,6 +27,9 @@ interface AppState {
   activityFeed: ActivityFeedItem[];
   targetCompetitionDate: string; // YYYY-MM-DD
   setTargetCompetitionDate: (date: string) => void;
+  theme: 'light' | 'dark';
+  setTheme: (theme: 'light' | 'dark') => void;
+  toggleTheme: () => void;
   
   // Actions
   switchUser: (userId: string) => void;
@@ -72,6 +75,15 @@ export const useAppStore = create<AppState>()(
       results: INITIAL_PRACTICE_RESULTS,
       activityFeed: INITIAL_ACTIVITY_FEED,
       targetCompetitionDate: '2026-10-28',
+      theme: 'light',
+
+      setTheme: (theme: 'light' | 'dark') => {
+        set({ theme });
+      },
+
+      toggleTheme: () => {
+        set((state) => ({ theme: state.theme === 'dark' ? 'light' : 'dark' }));
+      },
 
       setTargetCompetitionDate: (date: string) => {
         set({ targetCompetitionDate: date });

@@ -47,11 +47,11 @@ export const CompetitionBranchCard: React.FC<CompetitionBranchCardProps> = ({
   };
 
   return (
-    <div className="bg-white rounded-2xl border border-[#EDE8E1] shadow-[0_2px_10px_rgba(0,0,0,0.04)] p-3.5 sm:p-5 flex flex-col justify-between transition-all duration-200 hover:shadow-md hover:border-[#E2D9CC] group hover:-translate-y-0.5 min-h-[160px] sm:min-h-[175px]">
+    <div className="washi-card-bg rounded-2xl sm:rounded-3xl border border-[#E6DCD0] shadow-[0_6px_20px_rgba(17,24,39,0.08)] p-3.5 sm:p-5 flex flex-col justify-between transition-all duration-200 hover:shadow-[0_10px_28px_rgba(17,24,39,0.12)] hover:border-[#D8C9B8] group hover:-translate-y-0.5 min-h-[160px] sm:min-h-[175px]">
       {/* 1. Header: Squircle Icon Badge + Title Romaji + Subtitle Kanji */}
       <div className="flex flex-col sm:flex-row items-center sm:items-center text-center sm:text-left gap-2 sm:gap-3.5">
         {/* Soft cream squircle background container matching mockup */}
-        <div className="w-12 h-12 sm:w-[52px] sm:h-[52px] bg-[#FAF5EE] rounded-xl flex items-center justify-center flex-shrink-0 border border-[#F3ECE2] shadow-[0_1px_3px_rgba(0,0,0,0.03)] group-hover:scale-105 transition-transform duration-200">
+        <div className="w-12 h-12 sm:w-[52px] sm:h-[52px] bg-[#FAF3E8]/90 rounded-xl flex items-center justify-center flex-shrink-0 border border-[#EDE2D3] shadow-[0_1px_3px_rgba(0,0,0,0.04)] group-hover:scale-105 transition-transform duration-200">
           {renderIllustratedIcon()}
         </div>
 
@@ -67,7 +67,7 @@ export const CompetitionBranchCard: React.FC<CompetitionBranchCardProps> = ({
 
       {/* 2. Middle: Thin Crimson Progress Bar */}
       <div className="my-2.5 sm:my-3">
-        <div className="h-[5px] sm:h-[6px] w-full bg-[#F5E6E6] rounded-full overflow-hidden">
+        <div className="h-[5px] sm:h-[6px] w-full bg-[#EFE2DF] rounded-full overflow-hidden">
           <div
             className="h-full bg-[#A61B29] rounded-full transition-all duration-500 ease-out"
             style={{ width: `${Math.min(100, Math.max(16, progressPercent))}%` }}
@@ -78,9 +78,10 @@ export const CompetitionBranchCard: React.FC<CompetitionBranchCardProps> = ({
       {/* 3. Bottom: Main Action Button (Compact, full width, crimson) */}
       <Link
         href={meta.path}
-        className="w-full h-[36px] sm:h-[38px] bg-[#A61B29] hover:bg-[#8F1622] text-white font-bold text-xs sm:text-[13px] rounded-xl flex items-center justify-center transition-all duration-150 active:scale-[0.98] shadow-sm touch-target"
+        className="w-full h-[36px] sm:h-[38px] px-2.5 sm:px-4 bg-[#A61B29] hover:bg-[#8F1622] text-white font-bold text-[11px] sm:text-[13px] whitespace-nowrap rounded-xl flex items-center justify-center gap-1.5 transition-all duration-150 active:scale-[0.98] shadow-sm touch-target"
       >
         <span>Buka Ruang Latihan</span>
+        <span aria-hidden="true">→</span>
       </Link>
     </div>
   );

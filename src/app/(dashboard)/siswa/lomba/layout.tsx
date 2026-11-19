@@ -3,7 +3,7 @@
 import React from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { ArrowLeft, ChevronRight, Home } from 'lucide-react';
+import { ArrowLeft } from 'lucide-react';
 import { CATEGORIES_META } from '@/lib/utils';
 import { CompetitionCategory } from '@/types';
 
@@ -26,38 +26,20 @@ export default function LombaLayout({ children }: { children: React.ReactNode })
       {/* Breadcrumb & Navigation Bar (hidden on Shodou and Kanji to use custom compact header) */}
       {!hasCustomHeader && (
         <nav className="flex items-center justify-between text-xs text-sumi-charcoal pb-2 border-b border-sumi-border">
-          <div className="flex items-center gap-1.5 flex-wrap">
+          <div className="flex items-center gap-2.5 flex-wrap">
             <Link
               href="/siswa"
-              className="flex items-center gap-1 text-sumi-charcoal hover:text-crimson transition-colors"
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white/80 hover:bg-white border border-sumi-border text-sumi font-bold transition-colors shadow-2xs"
             >
-              <Home className="w-3.5 h-3.5" />
-              <span>Beranda</span>
-            </Link>
-            <ChevronRight className="w-3.5 h-3.5 text-sumi-muted" />
-            <Link
-              href="/siswa#katalog-lomba"
-              className="text-sumi-charcoal hover:text-crimson transition-colors"
-            >
-              Ruang Lomba
+              <ArrowLeft className="w-3.5 h-3.5 text-crimson" />
+              <span>Kembali</span>
             </Link>
             {meta && (
-              <>
-                <ChevronRight className="w-3.5 h-3.5 text-sumi-muted" />
-                <span className="font-bold text-crimson">
-                  {meta.name} ({meta.kanji})
-                </span>
-              </>
+              <span className="font-bold text-crimson bg-legible-text">
+                {meta.name} ({meta.kanji})
+              </span>
             )}
           </div>
-
-          <Link
-            href="/siswa"
-            className="inline-flex items-center gap-1 text-xs font-semibold text-sumi hover:text-crimson transition-colors"
-          >
-            <ArrowLeft className="w-3.5 h-3.5" />
-            <span className="hidden sm:inline">Pilih Cabang Lain</span>
-          </Link>
         </nav>
       )}
 

@@ -71,22 +71,22 @@ export const QuizContainer: React.FC<QuizContainerProps> = ({
         </div>
       )}
 
-      {/* Header Bar */}
-      <div className="bg-white rounded-3xl border border-sumi-border shadow-card p-5 sm:p-6 flex flex-col md:flex-row md:items-center justify-between gap-4">
+      {/* Header Bar — Light Frosted Glass with Crisp Sumi Typography */}
+      <div className="panel-frost-glass text-sumi rounded-3xl p-5 sm:p-6 flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div className="flex items-start sm:items-center gap-3">
           <button
             onClick={() => router.back()}
-            className="p-2 rounded-xl border border-sumi-border hover:bg-sumi-light text-sumi transition-colors touch-target"
+            className="p-2 rounded-xl border border-white/80 bg-white/75 hover:bg-white text-sumi transition-colors touch-target shadow-2xs"
             title="Kembali"
           >
             <ArrowLeft className="w-5 h-5" />
           </button>
           <div>
             <div className="flex items-center gap-2 flex-wrap">
-              <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-crimson-tint text-crimson">
+              <span className="px-2.5 py-0.5 rounded-md text-[10px] font-black uppercase tracking-wider bg-crimson text-white">
                 {practiceSet.category.replace('_', ' ')}
               </span>
-              <span className="text-xs font-semibold text-sumi-muted">
+              <span className="text-xs font-bold text-sumi-charcoal">
                 {practiceSet.difficulty_level}
               </span>
             </div>
@@ -108,7 +108,7 @@ export const QuizContainer: React.FC<QuizContainerProps> = ({
         )}
 
         {isSubmitted && (
-          <div className="flex items-center gap-2 bg-crimson-subtle border border-crimson-tint px-4 py-2 rounded-2xl">
+          <div className="flex items-center gap-2 bg-white/75 border border-white/85 px-4 py-2 rounded-2xl shadow-2xs">
             <span className="text-xs font-bold text-sumi-charcoal">Skor Anda:</span>
             <span className="text-xl font-black text-crimson">{score}</span>
             <span className="text-xs text-sumi-muted">/ 100</span>
@@ -117,8 +117,8 @@ export const QuizContainer: React.FC<QuizContainerProps> = ({
       </div>
 
       {/* Question Number Pills Navigation */}
-      <div className="bg-white rounded-2xl border border-sumi-border p-3.5 shadow-sm">
-        <div className="flex items-center justify-between text-xs font-bold text-sumi-charcoal mb-2.5">
+      <div className="panel-frost-glass rounded-2xl p-3.5">
+        <div className="flex items-center justify-between text-xs font-bold text-[#3D332A] mb-2.5">
           <span>Navigasi Soal:</span>
           <span>
             Terjawab: <strong className="text-crimson font-black">{answeredCount}</strong> / {totalQuestions}
@@ -130,7 +130,7 @@ export const QuizContainer: React.FC<QuizContainerProps> = ({
             const isAnswered = !!answers[q.id];
             const isSkipped = skipped.includes(q.id) && !isAnswered;
 
-            let pillStyle = "bg-sumi-light text-sumi-charcoal border-sumi-border";
+            let pillStyle = "bg-[#FFFDF8] text-[#4A3F35] border-[#D8CBB8] hover:border-crimson/50";
             if (isAnswered) {
               pillStyle = "bg-crimson text-white border-crimson font-bold";
             } else if (isSkipped) {
@@ -138,7 +138,7 @@ export const QuizContainer: React.FC<QuizContainerProps> = ({
             }
 
             if (isCurrent) {
-              pillStyle += " ring-2 ring-crimson ring-offset-2 scale-105";
+              pillStyle += " ring-2 ring-sumi ring-offset-2 ring-offset-[#F8F1E5] scale-105";
             }
 
             return (

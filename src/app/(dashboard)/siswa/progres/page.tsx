@@ -56,10 +56,10 @@ export default function SiswaProgresPage() {
             <ArrowLeft className="w-5 h-5" />
           </Link>
           <div>
-            <h1 className="text-xl sm:text-2xl font-black text-sumi">
+            <h1 className="text-xl sm:text-2xl font-black text-sumi bg-legible-text">
               Histori & Portofolio Progres
             </h1>
-            <p className="text-xs text-sumi-charcoal mt-0.5">
+            <p className="text-xs text-sumi-charcoal mt-0.5 bg-legible-text">
               Rekapitulasi capaian latihan mandiri dan skor kuis kompetisi {currentUser.full_name}.
             </p>
           </div>

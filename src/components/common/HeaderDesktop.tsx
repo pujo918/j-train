@@ -11,26 +11,64 @@ import {
   X,
   Calendar,
   Award,
-  RefreshCw
+  RefreshCw,
+  HelpCircle,
+  Sun,
+  Moon
 } from 'lucide-react';
 import { useAppStore } from '@/lib/data/store';
 import { usePWAInstall } from '@/hooks/usePWAInstall';
+import { QuickGuideModal } from '@/components/common/QuickGuideModal';
 
 export const HeaderDesktop: React.FC = () => {
   const pathname = usePathname();
   const router = useRouter();
-  const { currentUser, profiles, switchUser } = useAppStore();
+  const { currentUser, profiles, switchUser, theme, toggleTheme } = useAppStore();
   const { isInstallable, installApp } = usePWAInstall();
 
   const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
   const [isMadingModalOpen, setIsMadingModalOpen] = useState(false);
+  const [isGuideModalOpen, setIsGuideModalOpen] = useState(false);
 
   const isSenseiPath = pathname.startsWith('/sensei');
 
   return (
     <>
-      <header className="sticky top-0 z-40 w-full bg-white border-b border-sumi-border transition-all shadow-[0_1px_3px_rgba(0,0,0,0.02)]">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <header className="yozakura-header sticky top-0 z-40 w-full bg-[#FCF9F2]/90 backdrop-blur-md border-b-2 border-[#B91C1C]/20 transition-all shadow-[0_4px_20px_rgba(17,24,39,0.06)] relative">
+        {/* Clipped Decorative Washi Texture & Subtle Japanese Cloud Motif */}
+        <div className="absolute inset-0 overflow-hidden pointer-events-none select-none" aria-hidden="true">
+          <div className="absolute inset-0 bg-[url('/images/card-washi-pattern.jpg')] bg-cover bg-center opacity-50" />
+          {/* Subtle Center Japanese Cloud (Kumo) Line Art */}
+          <svg
+            viewBox="0 0 220 56"
+            fill="none"
+            xmlns="http://www.w3.org/2000/svg"
+            className="hidden lg:block absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-52 h-14 text-[#C4A882]/45"
+          >
+            <path
+              d="M28 24H92C98 24 102 20 102 15C102 10 98 6 92 6H64C59 6 55 10 55 15"
+              stroke="currentColor"
+              strokeWidth="1.6"
+              strokeLinecap="round"
+            />
+            <path
+              d="M12 36H148C155 36 160 31 160 25C160 19 155 14 148 14H122"
+              stroke="currentColor"
+              strokeWidth="1.6"
+              strokeLinecap="round"
+            />
+            <path
+              d="M52 46H188C194 46 198 42 198 37C198 32 194 28 188 28H154"
+              stroke="currentColor"
+              strokeWidth="1.4"
+              strokeLinecap="round"
+            />
+          </svg>
+          {/* Thin Crimson Accent Top Hairline */}
+          <div className="absolute top-0 inset-x-0 h-[2px] bg-gradient-to-r from-transparent via-[#B91C1C]/60 to-transparent" />
+        </div>
+
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
           {/* Desktop Navbar (>=768px): 76px */}
           <div className="hidden md:flex h-20 items-center justify-between">
             {/* Left: Brand Wordmark & Slogan */}
@@ -93,15 +131,41 @@ export const HeaderDesktop: React.FC = () => {
                 </button>
               )}
 
+              {/* Dark / Light Mode Toggle */}
+              <button
+                type="button"
+                onClick={toggleTheme}
+                className="w-8 h-8 rounded-full bg-[#F5EDE1]/90 dark:bg-white/10 hover:bg-crimson-tint/60 dark:hover:bg-white/20 border border-[#E2D6C5] dark:border-white/15 flex items-center justify-center text-sumi dark:text-amber-300 transition-all shadow-[0_1px_2px_rgba(0,0,0,0.03)]"
+                title={theme === 'dark' ? 'Pindah ke Mode Terang (Spring)' : 'Pindah ke Mode Gelap (Yozakura)'}
+                aria-label="Toggle Dark Mode"
+              >
+                {theme === 'dark' ? (
+                  <Sun className="w-4 h-4" />
+                ) : (
+                  <Moon className="w-4 h-4 text-sumi-charcoal" />
+                )}
+              </button>
+
+              {/* Quick Guide Button */}
+              <button
+                type="button"
+                onClick={() => setIsGuideModalOpen(true)}
+                className="px-3.5 py-1.5 text-xs font-bold text-sumi hover:text-crimson bg-[#F5EDE1]/90 hover:bg-crimson-tint/60 border border-[#E2D6C5] rounded-full transition-all flex items-center gap-1.5 shadow-[0_1px_2px_rgba(0,0,0,0.03)]"
+                title="Panduan Cepat Penggunaan J-TRAIN"
+              >
+                <HelpCircle className="w-3.5 h-3.5 text-crimson" />
+                <span>Panduan</span>
+              </button>
+
               {/* Fast Portal Switcher: Siswa / Sensei */}
-              <div className="flex items-center bg-sumi-light p-1 rounded-xl border border-sumi-border text-xs">
+              <div className="flex items-center bg-[#EFE6D8]/90 p-1 rounded-full border border-[#DFD3C3] text-xs shadow-[inset_0_1px_2px_rgba(0,0,0,0.04)]">
                 <button
                   onClick={() => {
                     const student = profiles.find(p => p.role === 'siswa');
                     if (student) switchUser(student.id);
                     router.push('/siswa');
                   }}
-                  className={`px-3 py-1 rounded-lg font-semibold transition-all ${
+                  className={`px-3.5 py-1 rounded-full font-bold transition-all ${
                     !isSenseiPath
                       ? 'bg-white text-crimson shadow-sm'
                       : 'text-sumi-charcoal hover:text-sumi'
@@ -115,7 +179,7 @@ export const HeaderDesktop: React.FC = () => {
                     if (sensei) switchUser(sensei.id);
                     router.push('/sensei');
                   }}
-                  className={`px-3 py-1 rounded-lg font-semibold transition-all flex items-center gap-1 ${
+                  className={`px-3.5 py-1 rounded-full font-bold transition-all flex items-center gap-1 ${
                     isSenseiPath
                       ? 'bg-crimson text-white shadow-sm'
                       : 'text-sumi-charcoal hover:text-sumi'
@@ -212,16 +276,16 @@ export const HeaderDesktop: React.FC = () => {
           </div>
 
           {/* Mobile Top Bar (<768px): 56px */}
-          <div className="flex md:hidden h-14 items-center justify-between">
-            <Link href={currentUser.role === 'sensei' ? '/sensei' : '/siswa'} className="flex items-center gap-1.5">
-              <span className="text-xl font-black tracking-tight text-[#B91C1C]">J-TRAIN</span>
+          <div className="flex md:hidden h-14 items-center justify-between gap-2">
+            <Link href={currentUser.role === 'sensei' ? '/sensei' : '/siswa'} className="flex items-center gap-1 shrink-0">
+              <span className="text-lg font-black tracking-tight text-[#B91C1C] whitespace-nowrap">J-TRAIN</span>
               <svg
-                width="18"
-                height="18"
+                width="16"
+                height="16"
                 viewBox="0 0 24 24"
                 fill="none"
                 xmlns="http://www.w3.org/2000/svg"
-                className="inline-block text-sumi"
+                className="inline-block text-sumi shrink-0"
               >
                 <path d="M2 5 C8 3 16 3 22 5 L22 7 C16 5 8 5 2 7 Z" fill="#111827" />
                 <rect x="4" y="8" width="16" height="2" fill="#111827" />
@@ -231,7 +295,27 @@ export const HeaderDesktop: React.FC = () => {
               </svg>
             </Link>
 
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-1.5 shrink-0">
+              <button
+                type="button"
+                onClick={toggleTheme}
+                className="w-7 h-7 rounded-full bg-[#FAF7F2] dark:bg-white/10 border border-sumi-border dark:border-white/15 flex items-center justify-center text-sumi dark:text-amber-300 shrink-0"
+                aria-label="Toggle Dark Mode"
+                title={theme === 'dark' ? 'Mode Terang' : 'Mode Gelap'}
+              >
+                {theme === 'dark' ? <Sun className="w-3.5 h-3.5" /> : <Moon className="w-3.5 h-3.5" />}
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setIsGuideModalOpen(true)}
+                className="w-7 h-7 rounded-full bg-[#FAF7F2] border border-sumi-border flex items-center justify-center text-crimson shrink-0"
+                aria-label="Panduan Cepat"
+                title="Panduan Cepat"
+              >
+                <HelpCircle className="w-3.5 h-3.5" />
+              </button>
+
               <button
                 onClick={() => {
                   if (currentUser.role === 'siswa') {
@@ -244,31 +328,87 @@ export const HeaderDesktop: React.FC = () => {
                     router.push('/siswa');
                   }
                 }}
-                className="px-2 py-1 text-[11px] font-bold rounded-lg border border-sumi-border bg-white text-sumi-charcoal flex items-center gap-1"
+                className="px-2 py-1 text-[11px] font-bold rounded-lg border border-sumi-border bg-white text-sumi-charcoal flex items-center gap-1 whitespace-nowrap shrink-0"
                 title="Ganti Mode Siswa / Sensei"
               >
-                <RefreshCw className="w-3 h-3 text-crimson" />
-                <span>{currentUser.role === 'siswa' ? 'Ke Sensei' : 'Ke Siswa'}</span>
+                <RefreshCw className="w-3 h-3 text-crimson shrink-0" />
+                <span>{currentUser.role === 'siswa' ? 'Sensei' : 'Siswa'}</span>
               </button>
 
               <button
                 onClick={() => setIsMadingModalOpen(true)}
-                className="w-7 h-7 rounded-full bg-crimson-tint flex items-center justify-center text-crimson"
+                className="w-7 h-7 rounded-full bg-crimson-tint flex items-center justify-center text-crimson shrink-0"
                 aria-label="Mading Madrasah"
               >
                 <Bell className="w-3.5 h-3.5" />
               </button>
 
-              <button
-                onClick={() => setIsProfileMenuOpen(!isProfileMenuOpen)}
-                className="w-8 h-8 rounded-full bg-[#B91C1C] text-white text-xs font-bold flex items-center justify-center shadow-sm"
-              >
-                {currentUser.avatar_url || currentUser.full_name.charAt(0)}
-              </button>
+              <div className="relative">
+                <button
+                  onClick={() => setIsProfileMenuOpen(!isProfileMenuOpen)}
+                  className="w-7 h-7 rounded-full bg-[#B91C1C] text-white text-xs font-bold flex items-center justify-center shadow-sm shrink-0"
+                  aria-label="Menu Profil"
+                >
+                  {currentUser.avatar_url || currentUser.full_name.charAt(0)}
+                </button>
+
+                {isProfileMenuOpen && (
+                  <div className="absolute right-0 mt-2 w-60 bg-white rounded-2xl shadow-xl border border-sumi-border py-2 z-50 animate-in fade-in slide-in-from-top-2 duration-150">
+                    <div className="px-4 py-2 border-b border-sumi-border">
+                      <p className="text-xs font-bold text-sumi">{currentUser.full_name}</p>
+                      <p className="text-[11px] text-sumi-muted">
+                        {currentUser.role === 'sensei' ? `NIP: ${currentUser.nisn}` : `NISN: ${currentUser.nisn}`}
+                      </p>
+                    </div>
+                    <div className="py-1">
+                      <p className="px-4 py-1 text-[10px] font-bold text-sumi-muted uppercase">
+                        Ganti Profil (Demo)
+                      </p>
+                      {profiles.map((p) => (
+                        <button
+                          key={p.id}
+                          onClick={() => {
+                            switchUser(p.id);
+                            setIsProfileMenuOpen(false);
+                            router.push(p.role === 'sensei' ? '/sensei' : '/siswa');
+                          }}
+                          className={`w-full px-4 py-2 text-left text-xs flex items-center justify-between hover:bg-crimson-tint/30 transition-colors ${
+                            p.id === currentUser.id ? 'font-bold text-crimson bg-crimson-subtle' : 'text-sumi'
+                          }`}
+                        >
+                          <div className="flex items-center gap-2">
+                            <span className="w-5 h-5 rounded-full bg-crimson-tint text-crimson text-[10px] font-bold flex items-center justify-center">
+                              {p.avatar_url || p.full_name[0]}
+                            </span>
+                            <span>{p.full_name}</span>
+                          </div>
+                          <span className="text-[10px] text-sumi-muted capitalize">{p.role}</span>
+                        </button>
+                      ))}
+                    </div>
+                    <div className="border-t border-sumi-border pt-1">
+                      <Link
+                        href="/login"
+                        onClick={() => setIsProfileMenuOpen(false)}
+                        className="block px-4 py-2 text-xs text-crimson hover:bg-crimson-tint/30 font-semibold"
+                      >
+                        Keluar / Halaman Login
+                      </Link>
+                    </div>
+                  </div>
+                )}
+              </div>
             </div>
           </div>
         </div>
       </header>
+
+      {/* QUICK GUIDE MODAL */}
+      <QuickGuideModal
+        isOpen={isGuideModalOpen}
+        onClose={() => setIsGuideModalOpen(false)}
+        defaultRole={isSenseiPath ? 'sensei' : 'siswa'}
+      />
 
       {/* MADING MADRASAH MODAL */}
       {isMadingModalOpen && (

@@ -19,8 +19,105 @@ body {
   min-height: 100vh;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  background-image: radial-gradient(rgba(139, 30, 30, 0.04) 1px, transparent 0);
-  background-size: 24px 24px;
+  background-image: url('/images/bg-fuji-sakura-v2.jpg');
+  background-size: cover;
+  background-position: center center;
+  background-repeat: no-repeat;
+  background-attachment: fixed;
+}
+
+/* Homepage Washi Card Pattern (Seigaiha + Sakura/Ume corner ornaments) */
+.washi-card-bg {
+  background-color: #FCF9F2;
+  background-image: url('/images/card-washi-pattern.jpg');
+  background-size: cover;
+  background-position: center center;
+  background-repeat: no-repeat;
+}
+
+/* Cerdas Cermat Card Sakura Branch Background */
+.sakura-card-bg {
+  background-color: rgba(249, 243, 232, 0.90);
+  background-image:
+    linear-gradient(
+      to bottom right,
+      rgba(249, 243, 232, 0.82) 0%,
+      rgba(249, 243, 232, 0.32) 55%,
+      rgba(249, 243, 232, 0.60) 100%
+    ),
+    url('/images/sakura-branch.png');
+  background-size: cover;
+  background-position: right top;
+  background-repeat: no-repeat;
+  backdrop-filter: blur(8px);
+  box-shadow: 0 10px 28px rgba(17, 24, 39, 0.12);
+}
+
+/* Crisp legibility for bare text over full-color illustration (no box/sandbox) */
+.bg-legible-text {
+  text-shadow:
+    0 1px 2px rgba(15, 23, 42, 0.18),
+    0 0 12px rgba(255, 255, 255, 0.96),
+    0 2px 22px rgba(255, 255, 255, 0.90);
+}
+
+/* Tailored Domain Surfaces per Competition Branch (Warm Washi Contrast + Frosted Depth) */
+.surface-kanji-washi {
+  background-color: #F9F2E5;
+  background-image: url('/images/kanji-washi-bg.jpg');
+  background-size: cover;
+  background-position: right center;
+  background-repeat: no-repeat;
+  box-shadow: 0 10px 28px rgba(17, 24, 39, 0.12);
+}
+
+.surface-shodou-hanshi {
+  background-color: #F7EFE2;
+  background-image:
+    linear-gradient(to bottom, rgba(247, 239, 226, 0.78), rgba(245, 235, 218, 0.88)),
+    url('/images/kanji-washi-bg.jpg');
+  background-size: cover;
+  background-position: right top;
+  background-repeat: no-repeat;
+  box-shadow: 0 12px 32px rgba(17, 24, 39, 0.14);
+}
+
+.surface-rodoku-manuscript {
+  background-color: rgba(248, 241, 229, 0.88);
+  backdrop-filter: blur(10px);
+  box-shadow: 0 10px 28px rgba(17, 24, 39, 0.12);
+}
+
+.surface-seiyu-studio {
+  background-color: rgba(246, 240, 232, 0.88);
+  backdrop-filter: blur(10px);
+  box-shadow: 0 10px 28px rgba(17, 24, 39, 0.12);
+}
+
+.surface-kiki-exam {
+  background-color: rgba(246, 242, 234, 0.90);
+  backdrop-filter: blur(10px);
+  box-shadow: 0 10px 28px rgba(17, 24, 39, 0.12);
+}
+
+/* Split-Contrast Studio Panels (Left Pagoda Washi + Top/Right Dark Translucent Glass) */
+.panel-washi-pagoda {
+  background-color: #FAF0E4;
+  background-image:
+    linear-gradient(to bottom, rgba(252, 244, 234, 0.42) 0%, rgba(252, 244, 234, 0.18) 60%, rgba(250, 238, 224, 0.35) 100%),
+    url('/images/pagoda-washi-bg.jpg');
+  background-size: cover;
+  background-position: center bottom;
+  background-repeat: no-repeat;
+  box-shadow: 0 16px 40px rgba(17, 14, 20, 0.16);
+}
+
+.panel-frost-glass {
+  background: linear-gradient(155deg, rgba(255, 255, 255, 0.48) 0%, rgba(242, 247, 255, 0.36) 100%);
+  backdrop-filter: blur(16px) saturate(145%);
+  -webkit-backdrop-filter: blur(16px) saturate(145%);
+  border: 1px solid rgba(255, 255, 255, 0.72);
+  box-shadow: 0 12px 32px rgba(30, 41, 59, 0.10), inset 0 1px 0 rgba(255, 255, 255, 0.80);
 }
 
 /* Furigana Ruby Styling for Japanese Pronunciation */
@@ -66,4 +163,372 @@ rt {
 ::selection {
   background: #FEE2E2;
   color: #991B1B;
+}
+
+/* ============================================================================
+   YOZAKURA NIGHT DARK MODE (html.dark)
+   Tailored for bg-fuji-night.jpg (Midnight Blue, Golden Kinkaku-ji, Glowing Sakura)
+   ============================================================================ */
+html.dark {
+  color-scheme: dark;
+}
+
+html.dark body {
+  background-color: #090E1C;
+  color: #F1F5F9;
+  background-image: url('/images/bg-fuji-night.jpg');
+  background-size: cover;
+  background-position: center center;
+  background-repeat: no-repeat;
+  background-attachment: fixed;
+}
+
+html.dark rt {
+  color: #FDA4AF;
+}
+
+html.dark input,
+html.dark select,
+html.dark textarea {
+  background-color: rgba(15, 23, 42, 0.78) !important;
+  border-color: rgba(148, 178, 235, 0.28) !important;
+  color: #F8FAFC !important;
+}
+
+html.dark input::placeholder,
+html.dark textarea::placeholder {
+  color: #94A3B8 !important;
+}
+
+html.dark input[type="date"]::-webkit-calendar-picker-indicator {
+  filter: invert(1) brightness(1.15);
+  cursor: pointer;
+}
+
+html.dark .yozakura-header {
+  background: linear-gradient(180deg, rgba(10, 16, 32, 0.84) 0%, rgba(13, 21, 42, 0.78) 100%) !important;
+  border-bottom-color: rgba(248, 113, 113, 0.25) !important;
+  box-shadow: 0 6px 24px rgba(2, 6, 23, 0.45) !important;
+}
+
+html.dark .yozakura-header .bg-\[url\(\'\/images\/card-washi-pattern\.jpg\'\)\] {
+  opacity: 0.06 !important;
+}
+
+html.dark .yozakura-header svg path[fill="#111827"],
+html.dark .yozakura-header svg rect[fill="#111827"] {
+  fill: #F8FAFC;
+}
+
+html.dark .yozakura-header svg[viewBox="0 0 220 56"] {
+  color: rgba(203, 213, 225, 0.35) !important;
+}
+
+html.dark .yozakura-header .text-sumi,
+html.dark .yozakura-header .text-sumi-charcoal {
+  color: #E2E8F0 !important;
+}
+
+html.dark .yozakura-header .text-\[\#4B5563\] {
+  color: #CBD5E1 !important;
+}
+
+html.dark .yozakura-header .bg-\[\#F5EDE1\]\/90,
+html.dark .yozakura-header .bg-\[\#EFE6D8\]\/90 {
+  background-color: rgba(255, 255, 255, 0.08) !important;
+  border-color: rgba(255, 255, 255, 0.16) !important;
+}
+
+/* Midnight Indigo Frosted Glass for Dark Mode */
+html.dark .panel-frost-glass {
+  background: linear-gradient(155deg, rgba(14, 22, 42, 0.64) 0%, rgba(19, 30, 56, 0.52) 100%);
+  backdrop-filter: blur(18px) saturate(150%);
+  -webkit-backdrop-filter: blur(18px) saturate(150%);
+  border: 1px solid rgba(148, 178, 235, 0.24);
+  box-shadow: 0 14px 36px rgba(2, 6, 23, 0.38), inset 0 1px 0 rgba(255, 255, 255, 0.12);
+  color: #F1F5F9;
+}
+
+/* Twilight Pagoda Panel in Dark Mode (using bespoke pagoda-night-bg.jpg) */
+html.dark .panel-washi-pagoda {
+  background-color: #0D1426;
+  background-image:
+    linear-gradient(to bottom, rgba(13, 20, 38, 0.35) 0%, rgba(13, 20, 38, 0.15) 55%, rgba(13, 20, 38, 0.40) 100%),
+    url('/images/pagoda-night-bg.jpg');
+  background-size: cover;
+  background-position: center bottom;
+  background-repeat: no-repeat;
+  border-color: rgba(251, 191, 36, 0.28) !important;
+  box-shadow: 0 16px 40px rgba(2, 6, 23, 0.50);
+  color: #F8FAFC;
+}
+
+/* Homepage Washi Cards in Dark Mode (Soft & Elegant Yozakura Corner Ornaments) */
+html.dark .washi-card-bg {
+  background-color: rgba(11, 18, 36, 0.80) !important;
+  background-image: url('/images/card-washi-night.svg') !important;
+  background-size: cover !important;
+  background-position: center center !important;
+  background-repeat: no-repeat !important;
+  backdrop-filter: blur(14px) saturate(135%);
+  -webkit-backdrop-filter: blur(14px) saturate(135%);
+  border-color: rgba(148, 178, 235, 0.22) !important;
+  box-shadow: 0 12px 30px rgba(2, 6, 23, 0.36);
+  color: #F1F5F9;
+}
+
+/* Kanji & Cerdas Cermat Cards in Dark Mode (Midnight Indigo + Seigaiha Watermark) */
+html.dark .sakura-card-bg,
+html.dark .surface-kanji-washi {
+  background-color: rgba(13, 20, 38, 0.78) !important;
+  background-image:
+    radial-gradient(circle at 92% 14%, rgba(244, 114, 182, 0.14) 0%, transparent 38%),
+    radial-gradient(circle at 8% 88%, rgba(251, 191, 36, 0.10) 0%, transparent 36%),
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='64' height='32' viewBox='0 0 64 32'%3E%3Cg fill='none' stroke='rgba(148,178,235,0.10)' stroke-width='1'%3E%3Ccircle cx='32' cy='32' r='28'/%3E%3Ccircle cx='32' cy='32' r='20'/%3E%3Ccircle cx='32' cy='32' r='12'/%3E%3Ccircle cx='0' cy='32' r='28'/%3E%3Ccircle cx='0' cy='32' r='20'/%3E%3Ccircle cx='64' cy='32' r='28'/%3E%3Ccircle cx='64' cy='32' r='20'/%3E%3C/g%3E%3C/svg%3E") !important;
+  background-size: cover, cover, 64px 32px !important;
+  background-repeat: no-repeat, no-repeat, repeat !important;
+  backdrop-filter: blur(16px) saturate(145%);
+  border-color: rgba(148, 178, 235, 0.24) !important;
+  box-shadow: 0 12px 30px rgba(2, 6, 23, 0.38);
+  color: #F1F5F9;
+}
+
+/* Legible bare text over Night Sky */
+html.dark .bg-legible-text {
+  color: #FFFFFF !important;
+  text-shadow:
+    0 1px 3px rgba(2, 6, 23, 0.96),
+    0 2px 10px rgba(6, 10, 24, 0.92),
+    0 0 22px rgba(6, 10, 24, 0.82);
+}
+
+/* Adaptive Typography across Dark Mode */
+html.dark .text-sumi,
+html.dark .text-gray-800,
+html.dark .text-\[\#18181B\],
+html.dark .text-\[\#1A1412\],
+html.dark .text-\[\#1A1614\],
+html.dark .text-\[\#1F1A1C\],
+html.dark .text-\[\#1F242D\],
+html.dark .text-\[\#2D251E\] {
+  color: #F8FAFC !important;
+}
+
+html.dark .text-sumi-charcoal,
+html.dark .text-\[\#374151\],
+html.dark .text-\[\#3D332A\],
+html.dark .text-\[\#4A3B32\],
+html.dark .text-\[\#4A3F35\],
+html.dark .text-\[\#4B5563\],
+html.dark .text-\[\#52525B\],
+html.dark .text-\[\#5A6472\],
+html.dark .text-\[\#6B2D26\],
+html.dark .text-\[\#6B5D4F\],
+html.dark .text-\[\#6D5A47\] {
+  color: #CBD5E1 !important;
+}
+
+html.dark .text-sumi-muted,
+html.dark .text-\[\#6B7280\],
+html.dark .text-\[\#7D6E5D\],
+html.dark .text-\[\#8C96A3\] {
+  color: #94A3B8 !important;
+}
+
+html.dark .text-crimson,
+html.dark .text-\[\#B91C1C\],
+html.dark .text-\[\#991B1B\],
+html.dark .text-\[\#8B151B\] {
+  color: #F87171 !important;
+}
+
+/* Global Light Surfaces -> Midnight Indigo Glass in Dark Mode */
+html.dark .bg-white,
+html.dark .bg-white\/95,
+html.dark .bg-white\/90,
+html.dark .bg-white\/85,
+html.dark .bg-white\/80,
+html.dark .bg-white\/75,
+html.dark .bg-white\/70,
+html.dark .bg-white\/65,
+html.dark .bg-white\/60,
+html.dark .bg-white\/50,
+html.dark .bg-white\/40,
+html.dark .bg-washi,
+html.dark .bg-washi\/70,
+html.dark .bg-washi\/60,
+html.dark .bg-washi\/50,
+html.dark .bg-washi\/40,
+html.dark .bg-sumi-light,
+html.dark .bg-sumi-light\/40,
+html.dark .bg-gray-50,
+html.dark .bg-zinc-50\/50,
+html.dark .bg-\[\#FFFDF9\],
+html.dark .bg-\[\#FFFDF9\]\/90,
+html.dark .bg-\[\#FCFBF8\],
+html.dark .bg-\[\#FCF9F2\]\/90,
+html.dark .bg-\[\#FAF7F2\],
+html.dark .bg-\[\#FAF7F2\]\/90,
+html.dark .bg-\[\#FAF7F2\]\/85,
+html.dark .bg-\[\#FAF7F2\]\/80,
+html.dark .bg-\[\#FAF7F2\]\/75,
+html.dark .bg-\[\#FAF7F2\]\/60,
+html.dark .bg-\[\#FAF5EE\],
+html.dark .bg-\[\#FAF5E9\],
+html.dark .bg-\[\#FAF3E8\]\/90,
+html.dark .bg-\[\#FDF9F1\],
+html.dark .bg-\[\#F7EFE1\],
+html.dark .bg-\[\#F7ECE3\],
+html.dark .bg-\[\#F5EDE1\]\/90,
+html.dark .bg-\[\#F3EAD8\],
+html.dark .bg-\[\#F0EBE1\],
+html.dark .bg-\[\#EFE6D8\]\/90,
+html.dark .bg-\[\#EFE2DF\],
+html.dark .bg-\[\#E4D9C8\] {
+  background-color: rgba(15, 23, 42, 0.72) !important;
+  border-color: rgba(148, 178, 235, 0.22) !important;
+  color: #F1F5F9 !important;
+}
+
+html.dark .hover\:bg-white:hover,
+html.dark .hover\:bg-white\/80:hover,
+html.dark .hover\:bg-sumi-light:hover,
+html.dark .hover\:bg-\[\#FAF7F2\]:hover,
+html.dark .hover\:bg-\[\#F0EBE1\]:hover {
+  background-color: rgba(30, 41, 59, 0.88) !important;
+}
+
+/* Tinted Status Boxes & Badges in Dark Mode */
+html.dark .bg-amber-50,
+html.dark .bg-amber-50\/80,
+html.dark .bg-amber-50\/70 {
+  background-color: rgba(120, 53, 15, 0.36) !important;
+  border-color: rgba(251, 191, 36, 0.34) !important;
+  color: #FDE68A !important;
+}
+
+html.dark .bg-emerald-50,
+html.dark .bg-emerald-50\/90,
+html.dark .bg-emerald-50\/80,
+html.dark .bg-emerald-50\/50,
+html.dark .bg-emerald-50\/20 {
+  background-color: rgba(6, 78, 59, 0.42) !important;
+  border-color: rgba(52, 211, 153, 0.32) !important;
+  color: #A7F3D0 !important;
+}
+
+html.dark .bg-sky-50,
+html.dark .bg-blue-50 {
+  background-color: rgba(12, 74, 110, 0.42) !important;
+  border-color: rgba(56, 189, 248, 0.32) !important;
+  color: #BAE6FD !important;
+}
+
+html.dark .bg-crimson-subtle,
+html.dark .bg-crimson-subtle\/40,
+html.dark .bg-crimson-tint,
+html.dark .bg-rose-50,
+html.dark .bg-red-50,
+html.dark .bg-\[\#FDF2F2\],
+html.dark .bg-\[\#FDF2F2\]\/60,
+html.dark .bg-\[\#FEF2F2\]\/85 {
+  background-color: rgba(127, 29, 29, 0.38) !important;
+  border-color: rgba(248, 113, 113, 0.35) !important;
+  color: #FECACA !important;
+}
+
+html.dark .text-emerald-700,
+html.dark .text-emerald-800 {
+  color: #6EE7B7 !important;
+}
+
+html.dark .text-red-700,
+html.dark .text-red-800 {
+  color: #FCA5A5 !important;
+}
+
+html.dark .text-sky-700 {
+  color: #38BDF8 !important;
+}
+
+html.dark .text-amber-700 {
+  color: #FCD34D !important;
+}
+
+html.dark .text-blue-700 {
+  color: #60A5FA !important;
+}
+
+/* Solid High-Contrast Dark Surface for Floating Modals, Dropdowns & Mobile Bottom Nav */
+html.dark .bg-white.shadow-xl,
+html.dark .bg-white.shadow-2xl,
+html.dark .bg-white.z-50 {
+  background-color: rgba(11, 18, 36, 0.97) !important;
+  backdrop-filter: blur(18px);
+}
+
+html.dark nav.fixed.bottom-0 {
+  background-color: rgba(10, 16, 32, 0.96) !important;
+}
+
+html.dark .border-emerald-200\/80 {
+  border-color: rgba(52, 211, 153, 0.34) !important;
+}
+
+html.dark .border-red-200\/80 {
+  border-color: rgba(248, 113, 113, 0.36) !important;
+}
+
+/* Distinct Active/Selected Indicator for bg-sumi Buttons & Tabs in Dark Mode */
+html.dark button.bg-sumi,
+html.dark a.bg-sumi {
+  background: linear-gradient(135deg, #B91C1C 0%, #991B1B 100%) !important;
+  border-color: rgba(252, 165, 165, 0.72) !important;
+  box-shadow: 0 0 0 1px rgba(252, 165, 165, 0.35), 0 8px 20px rgba(185, 28, 28, 0.36) !important;
+  color: #FFFFFF !important;
+}
+
+html.dark button.bg-sumi .text-crimson-scarlet {
+  color: #FDE68A !important;
+}
+
+/* Borders in Dark Mode */
+html.dark .border-sumi-border,
+html.dark .border-sumi-border\/80,
+html.dark .border-\[\#E5E7EB\],
+html.dark .border-\[\#EDE8E1\],
+html.dark .border-\[\#E6DCD0\],
+html.dark .border-\[\#E5DCCB\],
+html.dark .border-white,
+html.dark .border-white\/80,
+html.dark .border-white\/70 {
+  border-color: rgba(148, 178, 235, 0.22) !important;
+}
+
+html.dark .bg-gradient-to-r.from-amber-50\/90,
+html.dark .bg-gradient-to-r.from-\[\#F9EED2\]\/85,
+html.dark .bg-gradient-to-r.from-\[\#EEF1F5\]\/75,
+html.dark .bg-gradient-to-r.from-\[\#F5E9DC\]\/70,
+html.dark .bg-gradient-to-r.from-crimson-subtle,
+html.dark .bg-gradient-to-r.from-washi,
+html.dark .bg-gradient-to-r.from-white {
+  background-image: linear-gradient(135deg, rgba(15, 23, 42, 0.84) 0%, rgba(30, 41, 59, 0.74) 100%) !important;
+  border-color: rgba(148, 178, 235, 0.24) !important;
+  color: #F1F5F9 !important;
+}
+
+/* Preserve Shodou Hanshi Paper & Black Brush Ink */
+html.dark .bg-\[\#FFFDF8\] {
+  background-color: #FFFDF8 !important;
+  color: #111827 !important;
+}
+
+html.dark .bg-\[\#FFFDF8\] .text-sumi,
+html.dark .bg-\[\#FFFDF8\] .text-sumi-charcoal {
+  color: #111827 !important;
+}
+
+html.dark select option {
+  background-color: #0F172A;
+  color: #F8FAFC;
 }

@@ -78,7 +78,7 @@ export const INITIAL_PRACTICE_SETS: PracticeSet[] = [
     is_published: true,
     created_by: "user-sensei",
     created_at: "2026-09-10T08:00:00Z",
-    questions_count: 5,
+    questions_count: 15,
   },
   {
     id: "set-kanji-2",
@@ -100,11 +100,11 @@ export const INITIAL_PRACTICE_SETS: PracticeSet[] = [
     title: "Simulasi Cerdas Cermat Budaya & Pengetahuan Umum Jepang",
     description: "Latihan kecepatan menjawab (rapid quiz) seputar geografi, sejarah, budaya tradisional, kotowaza, dan peribahasa Jepang.",
     difficulty_level: "Menengah (N4)",
-    duration_minutes: 5, // 5 menit untuk 5 soal berwaktu
+    duration_minutes: 10, // 10 menit untuk 20 soal berwaktu
     is_published: true,
     created_by: "user-sensei",
     created_at: "2026-09-12T08:00:00Z",
-    questions_count: 5,
+    questions_count: 20,
   },
 
   // 3. KIKIKAKITORI

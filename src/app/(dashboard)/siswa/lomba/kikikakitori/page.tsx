@@ -11,6 +11,7 @@ import {
 import { normalizeJapaneseAnswer } from '@/lib/utils';
 import { 
   Home, 
+  ChevronLeft,
   ChevronRight, 
   ArrowLeft, 
   Headphones, 
@@ -80,7 +81,9 @@ export default function KikikakitoriLombaPage() {
   // Audio element & ticker reference
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const tickerIntervalRef = useRef<NodeJS.Timeout | null>(null);
+  const packageStripRef = useRef<HTMLDivElement | null>(null);
   const [showTranscript, setShowTranscript] = useState<boolean>(false);
+  const [checkedDictation, setCheckedDictation] = useState<Record<string, boolean>>({});
 
   // Summary / Result Modal
   const [isExamCompleted, setIsExamCompleted] = useState<boolean>(false);
@@ -116,8 +119,9 @@ export default function KikikakitoriLombaPage() {
   // Switch mode
   const handleModeChange = (mode: 'exam' | 'dictation') => {
     setActiveMode(mode);
+    setCheckedDictation({});
     if (mode === 'dictation') {
-      const dictSet = KIKIKAKITORI_PACKAGES.find((p) => p.id === 'set-kikikakitori-4') || KIKIKAKITORI_PACKAGES[0];
+      const dictSet = KIKIKAKITORI_PACKAGES.find((p) => p.id === 'set-kikikakitori-6') || KIKIKAKITORI_PACKAGES[0];
       handleSelectPackage(dictSet);
     } else {
       handleSelectPackage(KIKIKAKITORI_PACKAGES[0]);
@@ -299,14 +303,17 @@ export default function KikikakitoriLombaPage() {
       const dictationRaw = dictationAnswers[q.id] || '';
       const normalizedInput = normalizeJapaneseAnswer(dictationRaw);
 
-      let isMCCorrect = selected === q.correctKey;
-      let isDictationCorrect = q.dictationTarget.some(
-        (target) => normalizeJapaneseAnswer(target) === normalizedInput
-      );
+      const isMCCorrect = selected === q.correctKey;
+      const isDictationCorrect =
+        normalizedInput.length > 0 &&
+        q.dictationTarget.some(
+          (target) => normalizeJapaneseAnswer(target) === normalizedInput
+        );
 
-      // Either MC or Dictation counts as mastered/correct
-      if (isMCCorrect || isDictationCorrect) {
-        correct++;
+      if (activeMode === 'dictation') {
+        if (isDictationCorrect) correct++;
+      } else {
+        if (isMCCorrect) correct++;
       }
     });
 
@@ -331,24 +338,16 @@ export default function KikikakitoriLombaPage() {
     <div className="space-y-3 max-w-7xl mx-auto">
       {/* 1. SUB-HEADER & MODE TOGGLE (COMPACT TOP BAR) */}
       {/* Baris 1: Breadcrumb navigasi di kiri & Mode Ujian Terkunci di kanan */}
-      <div className="bg-white rounded-2xl border border-sumi-border px-4 py-2.5 flex flex-col sm:flex-row sm:items-center justify-between gap-2 shadow-2xs">
-        {/* Sisi Kiri: Breadcrumb Navigasi */}
-        <div className="flex items-center gap-1.5 text-xs text-sumi-charcoal flex-wrap">
+      <div className="panel-frost-glass rounded-2xl px-4 py-2.5 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+        {/* Sisi Kiri: Tombol Kembali & Nama Cabang */}
+        <div className="flex items-center gap-2.5 text-xs flex-wrap">
           <Link
             href="/siswa"
-            className="flex items-center gap-1 text-sumi-charcoal hover:text-crimson transition-colors"
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white/75 hover:bg-white border border-sumi-border text-sumi font-bold transition-colors shadow-2xs"
           >
-            <Home className="w-3.5 h-3.5" />
-            <span>Beranda</span>
+            <ArrowLeft className="w-3.5 h-3.5 text-crimson" />
+            <span>Kembali</span>
           </Link>
-          <ChevronRight className="w-3.5 h-3.5 text-sumi-muted" />
-          <Link
-            href="/siswa#katalog-lomba"
-            className="text-sumi-charcoal hover:text-crimson transition-colors"
-          >
-            Ruang Lomba
-          </Link>
-          <ChevronRight className="w-3.5 h-3.5 text-sumi-muted" />
           <span className="font-bold text-crimson flex items-center gap-1.5">
             <span>Kikikakitori (聞き書き)</span>
             <span className="text-[10px] bg-crimson-tint text-crimson font-black px-2 py-0.5 rounded-full uppercase tracking-wider">
@@ -379,7 +378,7 @@ export default function KikikakitoriLombaPage() {
       </div>
 
       {/* Baris 2: Judul Modul, Mode Switcher & Filter Level */}
-      <div className="bg-white rounded-2xl border border-sumi-border px-3.5 py-2 flex flex-col md:flex-row md:items-center justify-between gap-2.5 shadow-2xs">
+      <div className="panel-frost-glass rounded-2xl px-3.5 py-2 flex flex-col md:flex-row md:items-center justify-between gap-2.5">
         {/* Sisi Kiri: Judul & Mode Switcher */}
         <div className="flex flex-col sm:flex-row sm:items-center gap-3">
           <div className="hidden xl:block">
@@ -448,16 +447,16 @@ export default function KikikakitoriLombaPage() {
         {/* ============================================================== */}
         {/* SISI KIRI: AUDIO CONSOLE CARD (KONTROL MEDIA TERPROTEKSI 5-KOLOM) */}
         {/* ============================================================== */}
-        <div className="lg:col-span-5 bg-white rounded-2xl border border-sumi-border p-5 sm:p-6 space-y-4 shadow-sm lg:sticky lg:top-4">
+        <div className="lg:col-span-5 panel-washi-pagoda rounded-3xl border border-[#DFCBB8] p-5 sm:p-6 space-y-4 lg:sticky lg:top-4">
           {/* Header Audio Console */}
-          <div className="flex items-center justify-between pb-3 border-b border-sumi-border/70">
+          <div className="flex items-center justify-between pb-3 border-b border-[#D8C1AE]/70">
             <div className="flex items-center gap-2">
               <span className="w-2 h-4 bg-crimson rounded-full" />
-              <h2 className="text-xs sm:text-[13px] font-black text-sumi uppercase tracking-wider">
+              <h2 className="text-xs sm:text-[13px] font-black text-[#6B2D26] uppercase tracking-wider">
                 AUDIO CONSOLE & KONTROL UJIAN
               </h2>
             </div>
-            <span className="text-[10px] font-bold px-2.5 py-0.5 rounded-full bg-white border border-sumi-border text-sumi-muted">
+            <span className="text-[10px] font-bold px-2.5 py-0.5 rounded-full bg-white/80 border border-[#DEC9B6] text-[#4A3B32]">
               {activePackage.levelLabel}
             </span>
           </div>
@@ -622,9 +621,9 @@ export default function KikikakitoriLombaPage() {
         {/* ============================================================== */}
         {/* SISI KANAN: INTERACTIVE ANSWER SHEET (LEMBAR JAWAB CEPAT 7-KOLOM) */}
         {/* ============================================================== */}
-        <div className="lg:col-span-7 bg-white rounded-2xl border border-sumi-border p-5 sm:p-6 space-y-4 shadow-sm">
+        <div className="lg:col-span-7 panel-frost-glass rounded-3xl p-5 sm:p-6 space-y-4">
           {/* Header Soal & Progress Bar */}
-          <div className="space-y-2.5 pb-3 border-b border-sumi-border/70">
+          <div className="space-y-2.5 pb-3 border-b border-sumi/10">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <span className="w-2 h-4 bg-crimson rounded-full" />
@@ -650,8 +649,20 @@ export default function KikikakitoriLombaPage() {
 
           {currentQ ? (
             <div className="space-y-4">
+              {/* Compact 3-Step Guide Strip */}
+              <div className="px-3.5 py-2 rounded-xl bg-white/65 border border-white/80 flex flex-wrap items-center justify-between gap-2 text-[11px] font-semibold text-sumi-charcoal">
+                <span className="font-extrabold text-crimson">
+                  {activeMode === 'dictation' ? 'Mode Dikte (Kakitori):' : 'Mode Ujian (Choukai):'}
+                </span>
+                <span>
+                  {activeMode === 'dictation'
+                    ? '1. Putar Audio  →  2. Ketik Jawaban (Kana/Kanji/Romaji)  →  3. Periksa / Kumpulkan'
+                    : '1. Putar Audio (maks. 2×)  →  2. Pilih Opsi A–D  →  3. Kumpulkan'}
+                </span>
+              </div>
+
               {/* Question Text Box with proper padding */}
-              <div className="bg-[#FAF7F2]/80 p-4 sm:p-5 rounded-xl border border-sumi-border/70 space-y-1.5">
+              <div className="bg-[#FAF7F2]/85 p-4 sm:p-5 rounded-xl border border-sumi-border/70 space-y-1.5">
                 <span className="text-[11px] font-bold text-crimson uppercase tracking-wider block">
                   Pertanyaan Nomor {currentQ.orderIndex} • Menyimak Audio:
                 </span>
@@ -660,68 +671,125 @@ export default function KikikakitoriLombaPage() {
                 </h3>
               </div>
 
-              {/* Opsi Pilihan Ganda (Grid 2x2 with generous padding) */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                {currentQ.options.map((opt) => {
-                  const isSelected = selectedAnswers[currentQ.id] === opt.key;
+              {/* Mode 1: Exam -> Opsi Pilihan Ganda */}
+              {activeMode === 'exam' && (
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  {currentQ.options.map((opt) => {
+                    const isSelected = selectedAnswers[currentQ.id] === opt.key;
 
-                  return (
-                    <div
-                      key={opt.key}
-                      data-option-key={opt.key}
-                      role="button"
-                      tabIndex={0}
-                      onClick={() => handleSelectMC(opt.key)}
-                      className={`p-3.5 sm:p-4 rounded-xl border cursor-pointer transition-all flex items-center gap-3 select-none ${
-                        isSelected
-                          ? 'border-crimson bg-crimson-tint/40 ring-1 ring-crimson shadow-2xs font-bold text-sumi'
-                          : 'border-sumi-border bg-white hover:border-crimson/50 hover:bg-[#FAF7F2] text-sumi shadow-2xs'
-                      }`}
-                    >
+                    return (
                       <div
-                        className={`w-6 h-6 rounded-lg flex items-center justify-center font-bold text-xs transition-colors flex-shrink-0 ${
+                        key={opt.key}
+                        data-option-key={opt.key}
+                        role="button"
+                        tabIndex={0}
+                        onClick={() => handleSelectMC(opt.key)}
+                        className={`p-3.5 sm:p-4 rounded-xl border cursor-pointer transition-all flex items-center gap-3 select-none ${
                           isSelected
-                            ? 'bg-crimson text-white'
-                            : 'bg-washi border border-sumi-border text-sumi'
+                            ? 'border-crimson bg-crimson-tint/50 ring-1 ring-crimson shadow-2xs font-bold text-sumi'
+                            : 'border-sumi-border bg-white/85 hover:border-crimson/50 hover:bg-white text-sumi shadow-2xs'
                         }`}
                       >
-                        {opt.key}
+                        <div
+                          className={`w-6 h-6 rounded-lg flex items-center justify-center font-bold text-xs transition-colors flex-shrink-0 ${
+                            isSelected
+                              ? 'bg-crimson text-white'
+                              : 'bg-washi border border-sumi-border text-sumi'
+                          }`}
+                        >
+                          {opt.key}
+                        </div>
+                        <span className="text-xs sm:text-[13px] leading-normal">{opt.text}</span>
                       </div>
-                      <span className="text-xs sm:text-[13px] leading-normal">{opt.text}</span>
-                    </div>
-                  );
-                })}
-              </div>
+                    );
+                  })}
+                </div>
+              )}
 
-              {/* Area Dikte Kilat (Kakitori) with proper card padding */}
-              <div className="p-4 sm:p-5 rounded-xl bg-white border border-sumi-border/70 space-y-2.5 shadow-2xs">
-                <div className="flex items-center justify-between">
+              {/* Area Dikte Kilat (Kakitori): Primary interactive in 'dictation', optional note in 'exam' */}
+              <div
+                className={`p-4 sm:p-5 rounded-xl border space-y-3 shadow-2xs ${
+                  activeMode === 'dictation'
+                    ? 'bg-white/90 border-crimson/35'
+                    : 'bg-white/75 border-sumi-border/70'
+                }`}
+              >
+                <div className="flex items-center justify-between gap-2">
                   <label className="text-xs font-extrabold text-sumi flex items-center gap-1.5">
                     <Edit3 className="w-3.5 h-3.5 text-crimson" />
-                    <span>Area Dikte Kilat (Kakitori)</span>
+                    <span>
+                      {activeMode === 'dictation'
+                        ? 'Tulis Jawaban yang Kamu Dengar (Kakitori)'
+                        : 'Catatan Kata Kunci (Opsional)'}
+                    </span>
                   </label>
-                  <span className="text-[10px] text-sumi-muted italic">
-                    Opsional / Pelengkap Menyimak
+                  <span className="text-[10px] font-bold text-sumi-muted">
+                    {activeMode === 'dictation' ? 'Wajib • Dinilai' : 'Opsional'}
                   </span>
                 </div>
 
-                <div className="relative">
-                  <input
-                    type="text"
-                    value={dictationAnswers[currentQ.id] || ''}
-                    onChange={(e) => handleDictationChange(e.target.value)}
-                    placeholder="Ketik kanji/kana kata kunci..."
-                    className="w-full bg-[#FAF7F2] border border-sumi-border rounded-xl px-4 py-2.5 text-xs sm:text-sm text-sumi font-semibold focus:outline-none focus:border-crimson focus:ring-1 focus:ring-crimson transition-all placeholder:text-sumi-muted font-jp"
-                  />
-                  {dictationAnswers[currentQ.id] && (
-                    <div className="absolute right-3.5 top-3 text-emerald-600">
-                      <Check className="w-4 h-4" />
-                    </div>
+                <div className="flex flex-col sm:flex-row gap-2">
+                  <div className="relative flex-1">
+                    <input
+                      type="text"
+                      value={dictationAnswers[currentQ.id] || ''}
+                      onChange={(e) => {
+                        handleDictationChange(e.target.value);
+                        if (checkedDictation[currentQ.id]) {
+                          setCheckedDictation((prev) => ({ ...prev, [currentQ.id]: false }));
+                        }
+                      }}
+                      placeholder={currentQ.dictationHint || 'Ketik kanji/hiragana/romaji...'}
+                      className="w-full bg-[#FAF7F2] border border-sumi-border rounded-xl px-4 py-2.5 text-xs sm:text-sm text-sumi font-semibold focus:outline-none focus:border-crimson focus:ring-1 focus:ring-crimson transition-all placeholder:text-sumi-muted font-jp"
+                    />
+                    {dictationAnswers[currentQ.id] && (
+                      <div className="absolute right-3.5 top-3 text-emerald-600">
+                        <Check className="w-4 h-4" />
+                      </div>
+                    )}
+                  </div>
+
+                  {activeMode === 'dictation' && (
+                    <button
+                      type="button"
+                      disabled={!(dictationAnswers[currentQ.id] || '').trim()}
+                      onClick={() =>
+                        setCheckedDictation((prev) => ({ ...prev, [currentQ.id]: true }))
+                      }
+                      className="px-4 py-2.5 rounded-xl bg-sumi hover:bg-crimson disabled:opacity-45 text-white text-xs font-bold whitespace-nowrap transition-colors"
+                    >
+                      Periksa Ketikan
+                    </button>
                   )}
                 </div>
 
+                {/* Instant Dictation Feedback when checked */}
+                {activeMode === 'dictation' && checkedDictation[currentQ.id] && (() => {
+                  const norm = normalizeJapaneseAnswer(dictationAnswers[currentQ.id] || '');
+                  const isOk =
+                    norm.length > 0 &&
+                    currentQ.dictationTarget.some((t) => normalizeJapaneseAnswer(t) === norm);
+                  return (
+                    <div
+                      className={`p-3 rounded-xl text-xs font-semibold border ${
+                        isOk
+                          ? 'bg-emerald-50 border-emerald-300 text-emerald-900'
+                          : 'bg-rose-50 border-rose-300 text-rose-900'
+                      }`}
+                    >
+                      {isOk ? (
+                        <span>Tepat! Jawaban dikte cocok dengan audio.</span>
+                      ) : (
+                        <span>
+                          Belum tepat. Dengarkan lagi atau coba ketik: <strong>{currentQ.dictationTarget[0]}</strong>
+                        </span>
+                      )}
+                    </div>
+                  );
+                })()}
+
                 <div className="flex items-center justify-between text-[11px] text-sumi-muted">
-                  <span>Normalisasi Spasi & Huruf Aktif • Timeline Terkunci</span>
+                  <span>Normalisasi Spasi &amp; Huruf Aktif • Timeline Terkunci</span>
                   {dictationAnswers[currentQ.id] && (
                     <span className="font-mono text-sumi-charcoal text-[10px]">
                       Normal: &quot;{normalizeJapaneseAnswer(dictationAnswers[currentQ.id])}&quot;
@@ -790,33 +858,61 @@ export default function KikikakitoriLombaPage() {
         </div>
       </div>
 
-      {/* 4. BOTTOM STRIP: QUICK SELECTOR PAKET LAIN */}
-      <div className="bg-white rounded-2xl border border-sumi-border p-3.5 shadow-2xs space-y-2">
-        <div className="flex items-center justify-between text-xs">
-          <span className="font-extrabold text-sumi uppercase tracking-wider">
-            PILIHAN PAKET MENYIMAK LAINNYA:
-          </span>
-          <span className="text-[11px] text-sumi-muted hidden sm:inline">
-            Klik untuk berganti paket soal tanpa harus kembali ke beranda
-          </span>
+      {/* 4. BOTTOM STRIP: COMPACT 1-ROW HORIZONTAL CAROUSEL PAKET LAIN */}
+      <div className="panel-frost-glass rounded-3xl p-4 space-y-3">
+        <div className="flex items-center justify-between gap-3">
+          <div className="flex items-center gap-2">
+            <span className="text-xs font-extrabold text-sumi uppercase tracking-wider">
+              PILIHAN PAKET MENYIMAK LAINNYA
+            </span>
+            <span className="px-2 py-0.5 rounded-full bg-white/80 border border-white text-[10px] font-bold text-crimson">
+              {filteredPackages.length} Paket
+            </span>
+          </div>
+
+          <div className="flex items-center gap-1.5">
+            <span className="text-[11px] text-sumi-charcoal hidden md:inline mr-2">
+              Geser atau klik untuk ganti paket
+            </span>
+            <button
+              type="button"
+              onClick={() => packageStripRef.current?.scrollBy({ left: -280, behavior: 'smooth' })}
+              className="w-7 h-7 rounded-full bg-white/80 hover:bg-white border border-white text-sumi flex items-center justify-center shadow-2xs transition-colors"
+              aria-label="Geser Paket ke Kiri"
+            >
+              <ChevronLeft className="w-4 h-4" />
+            </button>
+            <button
+              type="button"
+              onClick={() => packageStripRef.current?.scrollBy({ left: 280, behavior: 'smooth' })}
+              className="w-7 h-7 rounded-full bg-white/80 hover:bg-white border border-white text-sumi flex items-center justify-center shadow-2xs transition-colors"
+              aria-label="Geser Paket ke Kanan"
+            >
+              <ChevronRight className="w-4 h-4" />
+            </button>
+          </div>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2.5">
+        <div
+          ref={packageStripRef}
+          className="flex items-stretch gap-3 overflow-x-auto pb-1.5 snap-x scroll-smooth"
+        >
           {filteredPackages.map((pkg, idx) => {
             const isCurrent = pkg.id === selectedPackageId;
             const isDraft = pkg.status === 'draft';
+            const numLabel = String(idx + 1).padStart(2, '0');
 
             let badgeText = 'Tersedia';
             let badgeStyle = 'bg-blue-50 text-blue-700 border-blue-200';
 
             if (isCurrent) {
               badgeText = 'Sedang Aktif';
-              badgeStyle = 'bg-crimson text-white';
+              badgeStyle = 'bg-crimson text-white border-crimson';
             } else if (pkg.bestScore) {
-              badgeText = `Skor: ${pkg.bestScore}/100 ✓`;
+              badgeText = `Skor: ${pkg.bestScore}/100`;
               badgeStyle = 'bg-emerald-50 text-emerald-700 border-emerald-200';
             } else if (isDraft) {
-              badgeText = 'Terkunci (Draft Sensei)';
+              badgeText = 'Draft';
               badgeStyle = 'bg-zinc-100 text-zinc-500 border-zinc-200';
             }
 
@@ -825,23 +921,23 @@ export default function KikikakitoriLombaPage() {
                 key={pkg.id}
                 disabled={isDraft}
                 onClick={() => handleSelectPackage(pkg)}
-                className={`p-2.5 rounded-xl border text-left transition-all flex flex-col justify-between space-y-1.5 ${
+                className={`min-w-[235px] max-w-[250px] flex-shrink-0 snap-start p-3 rounded-2xl border text-left transition-all flex flex-col justify-between space-y-2 ${
                   isCurrent
-                    ? 'border-crimson bg-crimson-tint/30 ring-1 ring-crimson'
+                    ? 'border-crimson bg-white/95 ring-1 ring-crimson shadow-sm'
                     : isDraft
-                    ? 'border-sumi-border/50 bg-zinc-50/60 opacity-60 cursor-not-allowed'
-                    : 'border-sumi-border bg-white hover:border-crimson/50 hover:bg-washi'
+                    ? 'border-white/50 bg-white/40 opacity-60 cursor-not-allowed'
+                    : 'border-white/80 bg-white/75 hover:border-crimson/50 hover:bg-white/95'
                 }`}
               >
-                <div className="flex items-center justify-between w-full">
+                <div className="flex items-center justify-between w-full gap-2">
                   <span className="text-[10px] font-black uppercase tracking-wider text-crimson">
-                    Paket 0{idx + 1} • {pkg.level}
+                    Paket {numLabel} • {pkg.level}
                   </span>
-                  <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded-full border ${badgeStyle}`}>
+                  <span className={`text-[9px] font-bold px-2 py-0.5 rounded-full border ${badgeStyle}`}>
                     {badgeText}
                   </span>
                 </div>
-                <div className="text-xs font-bold text-sumi line-clamp-1">
+                <div className="text-xs font-bold text-sumi line-clamp-2 leading-snug">
                   {pkg.title}
                 </div>
               </button>

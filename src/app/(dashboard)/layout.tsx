@@ -1,10 +1,10 @@
 'use client';
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import { HeaderDesktop } from '@/components/common/HeaderDesktop';
 import { BottomNavMobile } from '@/components/common/BottomNavMobile';
-import { JapaneseWatermarkPattern } from '@/components/icons/CompetitionIcons';
 import { usePWAInstall } from '@/hooks/usePWAInstall';
+import { useAppStore } from '@/lib/data/store';
 import { Download, X } from 'lucide-react';
 
 export default function DashboardLayout({
@@ -13,13 +13,15 @@ export default function DashboardLayout({
   children: React.ReactNode;
 }) {
   const { isInstallable, installApp } = usePWAInstall();
+  const { theme } = useAppStore();
   const [hideBanner, setHideBanner] = React.useState(false);
 
-  return (
-    <div className="min-h-screen flex flex-col bg-[#FAF7F2] relative">
-      {/* Background Watermark Pattern: Torii gates (⛩) & Sakura blossoms (🌸) */}
-      <JapaneseWatermarkPattern />
+  useEffect(() => {
+    document.documentElement.classList.toggle('dark', theme === 'dark');
+  }, [theme]);
 
+  return (
+    <div className="min-h-screen flex flex-col bg-transparent relative">
       {/* Header Desktop (76px) and Mobile Top Bar (56px) */}
       <HeaderDesktop />
 

@@ -4,8 +4,7 @@ import React, { useState, useRef, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { 
-  Home, 
-  ChevronRight, 
+  ArrowLeft, 
   Mic, 
   Square, 
   Play, 
@@ -394,94 +393,69 @@ export default function SeiyuLombaPage() {
   return (
     <div className="space-y-4 pb-12 text-sumi">
       {/* ========================================================================= */}
-      {/* 1. SUB-HEADER & FILTER PERAN RINGKAS                                      */}
+      {/* 1. CLEAN SUB-HEADER & FILTER PERAN RINGKAS (2 COMPACT FROSTED BARS)       */}
       {/* ========================================================================= */}
-      <div className="bg-white rounded-2xl border border-sumi-border shadow-sm p-4 sm:p-5 space-y-3.5">
-        {/* Baris 1: Breadcrumb Navigasi di Kiri & Status Mode di Kanan */}
-        <div className="flex items-center justify-between gap-3 text-xs border-b border-sumi-border pb-3 flex-wrap">
-          <nav className="flex items-center gap-1.5 flex-wrap">
+      <div className="space-y-2.5">
+        {/* Baris 1: Breadcrumb di Kiri & Clean Dropdown Naskah Anime di Kanan */}
+        <div className="panel-frost-glass rounded-2xl px-4 py-2.5 flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 text-xs">
+          <nav className="flex items-center gap-2.5 flex-wrap">
             <Link
               href="/siswa"
-              className="flex items-center gap-1 text-sumi-charcoal hover:text-crimson transition-colors"
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white/75 hover:bg-white border border-sumi-border text-sumi font-bold transition-colors shadow-2xs"
             >
-              <Home className="w-3.5 h-3.5" />
-              <span>Beranda</span>
+              <ArrowLeft className="w-3.5 h-3.5 text-crimson" />
+              <span>Kembali</span>
             </Link>
-            <ChevronRight className="w-3.5 h-3.5 text-sumi-muted" />
-            <Link
-              href="/siswa#katalog-lomba"
-              className="text-sumi-charcoal hover:text-crimson transition-colors"
-            >
-              Ruang Lomba
-            </Link>
-            <ChevronRight className="w-3.5 h-3.5 text-sumi-muted" />
-            <span className="font-bold text-crimson">
+            <span className="font-extrabold text-crimson">
               Seiyu (声優)
             </span>
           </nav>
 
-          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-crimson-subtle/40 border border-crimson/20 text-crimson text-[11px] font-bold">
-            <Lock className="w-3.5 h-3.5" />
-            <span>Mode Studio Interaktif • Prototype Suara Nihonjin Asli</span>
+          {/* Compact Dropdown Selector Naskah Anime */}
+          <div className="flex items-center gap-2">
+            <span className="text-[11px] font-bold text-sumi-charcoal">Naskah:</span>
+            <select
+              value={selectedSceneId}
+              onChange={(e) => handleSelectScene(e.target.value)}
+              aria-label="Pilih Naskah Anime Seiyu"
+              className="px-3.5 py-1.5 rounded-xl bg-white/75 hover:bg-white/95 border border-white/80 text-xs font-bold text-sumi focus:outline-none focus:border-crimson cursor-pointer shadow-2xs"
+            >
+              {SEIYU_SCENES.map((scene) => {
+                const shortName = scene.title.match(/『(.*?)』/)?.[1] || scene.title;
+                return (
+                  <option key={scene.id} value={scene.id}>
+                    『{shortName}』 ({scene.genre})
+                  </option>
+                );
+              })}
+            </select>
           </div>
         </div>
 
-        {/* Baris 1.5: Pilihan 5 Naskah Anime Berbeda Genre */}
-        <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-none pt-1">
-          <span className="text-[11px] font-bold text-sumi-charcoal shrink-0 flex items-center gap-1">
-            <Film className="w-3.5 h-3.5 text-crimson" />
-            <span>Pilih Naskah Anime:</span>
-          </span>
-          {SEIYU_SCENES.map((scene) => {
-            const isSelected = selectedSceneId === scene.id;
-            const shortName = scene.title.match(/『(.*?)』/)?.[1] || scene.title;
-            return (
-              <button
-                key={scene.id}
-                onClick={() => handleSelectScene(scene.id)}
-                className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all shrink-0 flex items-center gap-1.5 border ${
-                  isSelected
-                    ? 'bg-crimson text-white border-crimson shadow-sm'
-                    : 'bg-[#FAF7F2] text-sumi-charcoal border-sumi-border hover:bg-[#F5EFE6] hover:text-sumi'
-                }`}
-              >
-                <span>『{shortName}』</span>
-                <span className={`text-[10px] px-1.5 py-0.2 rounded-md ${
-                  isSelected ? 'bg-white/20 text-white' : 'bg-sumi-muted/20 text-sumi-charcoal'
-                }`}>
-                  {scene.genre}
-                </span>
-              </button>
-            );
-          })}
-        </div>
-
         {/* Baris 2: Judul Naskah Adegan & Pill Filter Karakter Interaktif */}
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div className="panel-frost-glass rounded-2xl px-4 py-3 flex flex-col md:flex-row md:items-center justify-between gap-3">
           <div className="space-y-0.5">
             <div className="flex items-center gap-2">
               <Film className="w-4 h-4 text-crimson" />
-              <h1 className="text-base sm:text-lg font-black text-sumi">
+              <h1 className="text-sm sm:text-base font-extrabold text-sumi">
                 {currentScene.title}: <span className="text-crimson font-serif">{currentScene.sceneCode}</span>
               </h1>
             </div>
             <p className="text-xs text-sumi-charcoal">
-              {currentScene.subtitle} • Tempo: <span className="font-medium text-sumi">{currentScene.tempo}</span>
+              {currentScene.subtitle} • Tempo: <span className="font-semibold text-sumi">{currentScene.tempo}</span>
             </p>
           </div>
 
-          {/* Segmented Control Pill: Karakter Saya */}
-          <div className="flex items-center gap-1.5 bg-[#FAF7F2] p-1.5 rounded-xl border border-sumi-border text-xs flex-wrap">
-            <span className="text-[11px] font-bold text-sumi-charcoal px-2 flex items-center gap-1">
-              <SlidersHorizontal className="w-3 h-3 text-crimson" />
-              <span>Karakter Saya:</span>
+          <div className="inline-flex items-center gap-1 bg-white/70 p-1 rounded-xl border border-white/80 text-xs flex-wrap self-start md:self-auto">
+            <span className="text-[11px] font-bold text-sumi-charcoal pl-2 pr-1">
+              Karakter:
             </span>
 
             <button
               onClick={() => setSelectedCharacterFilter('all')}
               className={`px-3 py-1 rounded-lg text-xs font-bold transition-all ${
                 selectedCharacterFilter === 'all'
-                  ? 'bg-sumi text-white shadow-sm'
+                  ? 'bg-sumi text-white shadow-2xs'
                   : 'text-sumi-charcoal hover:text-sumi'
               }`}
             >
@@ -496,17 +470,11 @@ export default function SeiyuLombaPage() {
                   onClick={() => setSelectedCharacterFilter(char)}
                   className={`flex items-center gap-1.5 px-3 py-1 rounded-lg text-xs font-bold transition-all ${
                     isActive
-                      ? 'bg-crimson text-white shadow-sm'
+                      ? 'bg-crimson text-white shadow-2xs'
                       : 'text-sumi-charcoal hover:text-sumi hover:bg-white/80'
                   }`}
                 >
-                  <span
-                    className={`w-2 h-2 rounded-full ${
-                      isActive ? 'bg-white' : 'bg-sumi-muted'
-                    }`}
-                  />
                   <span>{char}</span>
-                  {isActive && <span className="text-[10px] opacity-90">(Aktif)</span>}
                 </button>
               );
             })}
@@ -519,10 +487,10 @@ export default function SeiyuLombaPage() {
       {/* ========================================================================= */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-start">
         {/* ----------------------------------------------------------------------- */}
-        {/* SISI KIRI: KOTAK NASKAH INTERAKTIF (SCRIPT BOX) (Col 7/12)              */}
+        {/* SISI KIRI: KOTAK NASKAH INTERAKTIF (LIGHT FROSTED GLASS, Col 7/12)    */}
         {/* ----------------------------------------------------------------------- */}
-        <div className="lg:col-span-7 bg-white rounded-2xl border border-sumi-border shadow-sm p-4 sm:p-5 space-y-4">
-          <div className="flex items-center justify-between pb-3 border-b border-sumi-border">
+        <div className="lg:col-span-7 panel-frost-glass rounded-3xl p-4 sm:p-5 space-y-4">
+          <div className="flex items-center justify-between pb-3 border-b border-sumi/10">
             <div className="flex items-center gap-2">
               <span className="w-2 h-4 bg-crimson rounded-full" />
               <h2 className="text-sm sm:text-base font-black tracking-wide text-sumi uppercase">
@@ -664,13 +632,13 @@ export default function SeiyuLombaPage() {
         </div>
 
         {/* ----------------------------------------------------------------------- */}
-        {/* SISI KANAN: STUDIO RECORDER & PLAYBACK CONSOLE (Col 5/12)                */}
+        {/* SISI KANAN: STUDIO RECORDER & PLAYBACK CONSOLE (PAGODA WASHI, Col 5/12) */}
         {/* ----------------------------------------------------------------------- */}
-        <div className="lg:col-span-5 bg-white rounded-2xl border border-sumi-border shadow-sm p-4 sm:p-5 space-y-5 lg:sticky lg:top-4">
-          <div className="flex items-center justify-between pb-3 border-b border-sumi-border">
+        <div className="lg:col-span-5 panel-washi-pagoda rounded-3xl border border-[#DFCBB8] p-4 sm:p-5 space-y-5 lg:sticky lg:top-4">
+          <div className="flex items-center justify-between pb-3 border-b border-[#D8C1AE]/70">
             <div className="flex items-center gap-2">
               <Mic className="w-4 h-4 text-crimson" />
-              <h2 className="text-sm sm:text-base font-black tracking-wide text-sumi uppercase">
+              <h2 className="text-sm sm:text-base font-black tracking-wide text-[#6B2D26] uppercase">
                 STUDIO RECORDER & PLAYBACK CONSOLE
               </h2>
             </div>

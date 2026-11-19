@@ -1,4 +1,4 @@
-const CACHE_NAME = 'jtrain-cache-v1';
+const CACHE_NAME = 'jtrain-cache-v2';
 const STATIC_ASSETS = [
   '/',
   '/manifest.json',
@@ -30,6 +30,14 @@ self.addEventListener('fetch', (event) => {
   if (event.request.method !== 'GET') return;
 
   const url = new URL(event.request.url);
+
+  // Never serve stale /_next/static/ chunks during local dev on localhost
+  if (
+    (url.hostname === 'localhost' || url.hostname === '127.0.0.1') &&
+    url.pathname.startsWith('/_next/')
+  ) {
+    return;
+  }
 
   // Stale-while-revalidate for static assets, network-first for documents/API
   if (

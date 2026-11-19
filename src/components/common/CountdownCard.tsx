@@ -60,7 +60,7 @@ export const CountdownCard: React.FC<CountdownCardProps> = () => {
 
   return (
     <>
-      <div className="bg-white rounded-2xl sm:rounded-3xl border border-[#E5E7EB] shadow-card px-5 py-4 sm:px-6 sm:py-4.5 flex items-center justify-between gap-5 transition-all hover:border-crimson-tint relative group">
+      <div className="washi-card-bg rounded-2xl sm:rounded-3xl border border-[#E6DCD0] shadow-[0_6px_20px_rgba(17,24,39,0.08)] px-5 py-4 sm:px-6 sm:py-4.5 flex items-center justify-between gap-5 transition-all hover:border-crimson-tint relative group">
         {/* Left: Text & Setting Trigger */}
         <div className="space-y-0.5">
           <div className="flex items-center gap-1.5 text-[11px] sm:text-[12px] font-bold tracking-[0.8px] text-[#4B5563] uppercase">

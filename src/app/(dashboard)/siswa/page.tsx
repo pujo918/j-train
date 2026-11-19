@@ -60,12 +60,12 @@ export default function SiswaDashboardPage() {
     <div className="max-w-5xl mx-auto space-y-6 sm:space-y-7">
       {/* 1. HERO SECTION & COUNTDOWN CARD (Clean & Compact as in mockup) */}
       <section className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        {/* Sisi Kiri: Sapaan Personal */}
+        {/* Sisi Kiri: Sapaan Personal (tanpa box, tegas dengan halo tipis) */}
         <div>
-          <h1 className="text-2xl sm:text-[28px] font-black text-sumi tracking-tight leading-tight">
+          <h1 className="text-2xl sm:text-[30px] font-black text-sumi tracking-tight leading-tight bg-legible-text">
             Halo, {currentUser.full_name}!
           </h1>
-          <p className="text-base sm:text-lg font-medium text-[#374151] mt-0.5">
+          <p className="text-base sm:text-lg font-bold text-sumi/90 mt-0.5 bg-legible-text">
             Siap latihan hari ini?
           </p>
         </div>
@@ -96,14 +96,17 @@ export default function SiswaDashboardPage() {
 
       {/* 3. SECTION MONITORING: "PERKEMBANGAN SAYA" */}
       <section className="space-y-3 pt-1">
-        <h2 className="text-[13px] sm:text-[14px] font-extrabold tracking-[1px] text-sumi uppercase">
-          PERKEMBANGAN SAYA
-        </h2>
+        <div className="flex items-center gap-3">
+          <h2 className="text-[13px] sm:text-[15px] font-black tracking-[1px] text-sumi uppercase bg-legible-text">
+            PERKEMBANGAN SAYA
+          </h2>
+          <div className="h-[1.5px] flex-1 bg-sumi/20 rounded-full" />
+        </div>
 
         {/* 2 Kolom seimbang di desktop, 1 kolom di mobile */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-5">
           {/* Card Metrik 1 - RATA-RATA SKOR KUIS: [Nilai] */}
-          <div className="bg-white rounded-2xl sm:rounded-3xl border border-[#E5E7EB] shadow-card p-4 sm:p-5 flex flex-col justify-between space-y-3">
+          <div className="washi-card-bg rounded-2xl sm:rounded-3xl border border-[#E6DCD0] shadow-[0_6px_20px_rgba(17,24,39,0.08)] p-4 sm:p-5 flex flex-col justify-between space-y-3">
             <div className="text-[12px] sm:text-[13px] font-extrabold tracking-[0.5px] text-sumi uppercase">
               RATA-RATA SKOR KUIS: {avgScore}
             </div>
@@ -118,7 +121,7 @@ export default function SiswaDashboardPage() {
           </div>
 
           {/* Card Metrik 2 - LATIHAN TERAKHIR: [Nama Paket] (Skor: [Nilai]) */}
-          <div className="bg-white rounded-2xl sm:rounded-3xl border border-[#E5E7EB] shadow-card p-4 sm:p-5 flex flex-col justify-between space-y-3">
+          <div className="washi-card-bg rounded-2xl sm:rounded-3xl border border-[#E6DCD0] shadow-[0_6px_20px_rgba(17,24,39,0.08)] p-4 sm:p-5 flex flex-col justify-between space-y-3">
             <div className="text-[12px] sm:text-[13px] font-extrabold tracking-[0.5px] text-sumi uppercase truncate">
               LATIHAN TERAKHIR: {lastResult?.set_title || 'Kanji Paket 1'} (Skor: {lastResult?.score ?? 90})
             </div>
