@@ -61,5 +61,3 @@ Platform **J-TRAIN** dikembangkan untuk mengatasi kesenjangan struktural pembela
 4. **Live Activity Feed:**
    * Real-time stream aktivitas mandiri siswa saat belajar di ponsel/lab.
 
----
-
